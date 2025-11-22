@@ -12,16 +12,13 @@ export default function PGDetails() {
   const [selectedImage, setSelectedImage] = useState(0);
 
   useEffect(() => {
-    // Find the PG by ID
     const foundPG = pgList.find(p => p.id === parseInt(id));
     if (foundPG) {
       setPG(foundPG);
     } else {
-      // If PG not found, redirect to home
       navigate("/");
     }
 
-    // Load wishlist
     const saved = localStorage.getItem('pgWishlist');
     if (saved) {
       setWishlist(JSON.parse(saved));
@@ -94,7 +91,6 @@ export default function PGDetails() {
     );
   }
 
-  // Create image gallery (main image + additional images if available)
   const images = [pg.image, ...(pg.additionalImages || [])];
 
   return (
@@ -105,7 +101,6 @@ export default function PGDetails() {
       </button>
 
       <div className="pg-details-content">
-        {/* Image Gallery */}
         <div className="image-gallery">
           <div className="main-image">
             <img src={images[selectedImage]} alt={pg.name} />
@@ -138,7 +133,6 @@ export default function PGDetails() {
           )}
         </div>
 
-        {/* Details Section */}
         <div className="details-section">
           <div className="details-header">
             <div>
@@ -154,7 +148,6 @@ export default function PGDetails() {
             </div>
           </div>
 
-          {/* Quick Info */}
           <div className="quick-info">
             <div className="info-card">
               <Users size={20} />
@@ -186,13 +179,11 @@ export default function PGDetails() {
             </div>
           </div>
 
-          {/* Description */}
           <div className="description-section">
             <h2>About this PG</h2>
             <p>{pg.description || "A comfortable and well-maintained PG accommodation with all essential amenities. Perfect for students and working professionals looking for a safe and convenient living space."}</p>
           </div>
 
-          {/* Amenities */}
           {pg.amenities && pg.amenities.length > 0 && (
             <div className="amenities-section">
               <h2>Amenities</h2>
@@ -207,7 +198,7 @@ export default function PGDetails() {
             </div>
           )}
 
-          {/* Rules */}
+
           {pg.rules && pg.rules.length > 0 && (
             <div className="rules-section">
               <h2>House Rules</h2>
@@ -219,7 +210,7 @@ export default function PGDetails() {
             </div>
           )}
 
-          {/* Contact */}
+
           <div className="contact-section">
             <h2>Contact Information</h2>
             <div className="contact-info">
@@ -244,7 +235,6 @@ export default function PGDetails() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="action-buttons">
             <button className="btn-primary" onClick={() => alert('Contact owner feature coming soon!')}>
               Contact Owner

@@ -157,7 +157,6 @@
   gap: 20px;
 }
 
-/* Search Form Styles */
 .navbar-search-form {
   position: relative;
   width: 100%;
@@ -201,7 +200,6 @@
   transform: translateY(-50%) scale(1.05);
 }
 
-/* Mobile Menu Content */
 .mobile-menu-content {
   position: absolute;
   top: 100%;
@@ -213,7 +211,6 @@
   display: none;
 }
 
-/* Mobile Search Form */
 .mobile-search-form {
   position: relative;
   width: 100%;

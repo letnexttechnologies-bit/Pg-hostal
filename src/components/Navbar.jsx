@@ -16,7 +16,6 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Check login status
     const checkAuth = () => {
       const isLoggedIn = localStorage.getItem("loggedIn");
       const userData = localStorage.getItem("user");
@@ -27,12 +26,10 @@ export default function Navbar() {
 
     checkAuth();
 
-    // Handle scroll
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
 
-    // Close dropdown when clicking outside
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowProfileDropdown(false);
@@ -50,7 +47,6 @@ export default function Navbar() {
     };
   }, []);
 
-  // Update search query from URL when navigating back to home
   useEffect(() => {
     if (location.pathname === "/" && location.search) {
       const params = new URLSearchParams(location.search);
@@ -85,8 +81,6 @@ export default function Navbar() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    
-    // Navigate to home page with search query
     if (searchQuery.trim()) {
       navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
