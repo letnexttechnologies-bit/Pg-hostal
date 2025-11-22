@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Login from './pages/Login';
+import Login from './pages/login';
 import Wishlist from './pages/Wishlist';
 import Profile from './pages/Profile';
 import PGDetails from './pages/PGDetails';
