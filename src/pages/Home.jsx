@@ -7,15 +7,20 @@ import pgList from "../data/pgList";
 export default function Home({ searchQuery: propSearchQuery }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [userLocation, setUserLocation] = useState([12.9716, 77.5946]);
+  const [userLocation, setUserLocation] = useState([12.9716, 80.2209]); 
   const [pgsWithDistance, setPGsWithDistance] = useState([]);
   const [showMap, setShowMap] = useState(false);
   const [maxPrice, setMaxPrice] = useState(25000);
   const [wishlist, setWishlist] = useState([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Sync with navbar search prop
+  const [filters, setFilters] = useState({
+    stayType: [],
+    sharingType: [],
+    gender: [],
+    amenities: [],
+    locality: ""
+  });
   useEffect(() => {
     if (propSearchQuery !== undefined) {
       setSearchQuery(propSearchQuery);
@@ -33,14 +38,12 @@ export default function Home({ searchQuery: propSearchQuery }) {
         setIsLoadingLocation(false);
       },
       (error) => {
-        // If location access is denied or fails, use default location
         console.error("Location error:", error);
-        calculateDistance([12.9716, 77.5946]);
+        calculateDistance([12.9716, 80.2209]);
         setIsLoadingLocation(false);
       }
     );
 
-    // Handle search query from navigation state
     if (location.state?.searchQuery) {
       setSearchQuery(location.state.searchQuery);
     }
@@ -53,11 +56,10 @@ export default function Home({ searchQuery: propSearchQuery }) {
           setWishlist(JSON.parse(saved));
         }
         
-        // Handle wishlist action after login redirect
         if (location.state?.pendingWishlistAction) {
           const pgToAdd = location.state.pendingWishlistAction;
           toggleWishlistAfterLogin(pgToAdd);
-          // Clear the state
+          
           navigate('/', { replace: true, state: {} });
         }
       }
@@ -65,7 +67,6 @@ export default function Home({ searchQuery: propSearchQuery }) {
 
     loadWishlist();
 
-    // Listen for storage changes (for login updates)
     window.addEventListener('storage', loadWishlist);
     return () => window.removeEventListener('storage', loadWishlist);
   }, [location.state]);
@@ -107,6 +108,45 @@ export default function Home({ searchQuery: propSearchQuery }) {
     setSearchQuery(e.target.value);
   };
 
+  const handleFilterChange = (category, value) => {
+    setFilters(prev => {
+      const currentValues = prev[category];
+      
+      if (Array.isArray(currentValues)) {
+        
+        if (currentValues.includes(value)) {
+          return {
+            ...prev,
+            [category]: currentValues.filter(v => v !== value)
+          };
+        } else {
+          return {
+            ...prev,
+            [category]: [...currentValues, value]
+          };
+        }
+      } else {
+        
+        return {
+          ...prev,
+          [category]: value
+        };
+      }
+    });
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      stayType: [],
+      sharingType: [],
+      gender: [],
+      amenities: [],
+      locality: ""
+    });
+    setMaxPrice(25000);
+    setSearchQuery("");
+  };
+
   const toggleWishlistAfterLogin = (pg) => {
     const saved = localStorage.getItem('pgWishlist');
     const currentWishlist = saved ? JSON.parse(saved) : [];
@@ -117,7 +157,6 @@ export default function Home({ searchQuery: propSearchQuery }) {
       setWishlist(updated);
       localStorage.setItem('pgWishlist', JSON.stringify(updated));
       
-      // Optional: Show success message
       alert('Added to wishlist!');
     }
   };
@@ -127,7 +166,6 @@ export default function Home({ searchQuery: propSearchQuery }) {
     const isLoggedIn = checkUserLoggedIn();
     
     if (!isLoggedIn) {
-      // Store the PG data to add after login
       navigate('/login', { 
         state: { 
           from: '/', 
@@ -155,21 +193,38 @@ export default function Home({ searchQuery: propSearchQuery }) {
     return wishlist.some(item => item.id === pgId);
   };
 
-  // Filter PGs by price and search query
+  
   const filteredPGs = pgsWithDistance.filter(pg => {
     const matchesPrice = pg.price <= maxPrice;
     const matchesSearch = searchQuery.trim() === "" || 
       pg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pg.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    return matchesPrice && matchesSearch;
+    const matchesGender = filters.gender.length === 0 || 
+      filters.gender.some(g => pg.gender.toLowerCase() === g.toLowerCase());
+    
+    const matchesStayType = filters.stayType.length === 0 || 
+      filters.stayType.some(st => pg.stayType?.toLowerCase() === st.toLowerCase());
+    
+    const matchesSharingType = filters.sharingType.length === 0 || 
+      filters.sharingType.some(st => pg.sharingType?.toLowerCase().includes(st.toLowerCase()));
+    
+    const matchesAmenities = filters.amenities.length === 0 || 
+      filters.amenities.every(amenity => 
+        pg.amenities?.some(pgAmenity => pgAmenity.toLowerCase() === amenity.toLowerCase())
+      );
+    
+    const matchesLocality = filters.locality.trim() === "" ||
+      pg.location.toLowerCase().includes(filters.locality.toLowerCase());
+    
+    return matchesPrice && matchesSearch && matchesGender && matchesStayType && 
+           matchesSharingType && matchesAmenities && matchesLocality;
   });
 
   return (
     <div className="home-container">
       <h2 className="title">PGs Near You</h2>
 
-      {/* Search Bar */}
       <div className="search-container">
         <input
           type="text"
@@ -220,41 +275,136 @@ export default function Home({ searchQuery: propSearchQuery }) {
 
           <div className="filter-group">
             <p>Stay Type</p>
-            <label><input type="checkbox" /> Co-living</label>
-            <label><input type="checkbox" /> Student Living</label>
+            <label>
+              <input 
+                type="checkbox" 
+                checked={filters.stayType.includes('Co-living')}
+                onChange={() => handleFilterChange('stayType', 'Co-living')}
+              /> Co-living
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.stayType.includes('Student Living')}
+                onChange={() => handleFilterChange('stayType', 'Student Living')}
+              /> Student Living
+            </label>
           </div>
 
           <div className="filter-group">
             <p>Sharing Type</p>
-            <label><input type="checkbox" /> Private</label>
-            <label><input type="checkbox" /> 2 Sharing</label>
-            <label><input type="checkbox" /> 3 Sharing</label>
-            <label><input type="checkbox" /> 4 Sharing</label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.sharingType.includes('Private')}
+                onChange={() => handleFilterChange('sharingType', 'Private')}
+              /> Private
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.sharingType.includes('2 Sharing')}
+                onChange={() => handleFilterChange('sharingType', '2 Sharing')}
+              /> 2 Sharing
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.sharingType.includes('3 Sharing')}
+                onChange={() => handleFilterChange('sharingType', '3 Sharing')}
+              /> 3 Sharing
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.sharingType.includes('4 Sharing')}
+                onChange={() => handleFilterChange('sharingType', '4 Sharing')}
+              /> 4 Sharing
+            </label>
           </div>
 
           <div className="filter-group">
             <p>Gender</p>
-            <label><input type="checkbox" /> Male</label>
-            <label><input type="checkbox" /> Female</label>
-            <label><input type="checkbox" /> Unisex</label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.gender.includes('Male')}
+                onChange={() => handleFilterChange('gender', 'Male')}
+              /> Male
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.gender.includes('Female')}
+                onChange={() => handleFilterChange('gender', 'Female')}
+              /> Female
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.gender.includes('Unisex')}
+                onChange={() => handleFilterChange('gender', 'Unisex')}
+              /> Unisex
+            </label>
           </div>
 
           <div className="filter-group">
             <p>Amenities</p>
-            <label><input type="checkbox" /> AC</label>
-            <label><input type="checkbox" /> Gym</label>
-            <label><input type="checkbox" /> Food</label>
-            <label><input type="checkbox" /> Fridge</label>
-            <label><input type="checkbox" /> Parking</label>
-            <label><input type="checkbox" /> Power Backup</label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.amenities.includes('AC')}
+                onChange={() => handleFilterChange('amenities', 'AC')}
+              /> AC
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.amenities.includes('Gym')}
+                onChange={() => handleFilterChange('amenities', 'Gym')}
+              /> Gym
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.amenities.includes('Food')}
+                onChange={() => handleFilterChange('amenities', 'Food')}
+              /> Food
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.amenities.includes('Fridge')}
+                onChange={() => handleFilterChange('amenities', 'Fridge')}
+              /> Fridge
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.amenities.includes('Parking')}
+                onChange={() => handleFilterChange('amenities', 'Parking')}
+              /> Parking
+            </label>
+            <label>
+              <input 
+                type="checkbox"
+                checked={filters.amenities.includes('Power Backup')}
+                onChange={() => handleFilterChange('amenities', 'Power Backup')}
+              /> Power Backup
+            </label>
           </div>
 
           <div className="filter-group">
             <p>Locality</p>
-            <input type="text" placeholder="Search area..." />
+            <input 
+              type="text" 
+              placeholder="Search area..."
+              value={filters.locality}
+              onChange={(e) => handleFilterChange('locality', e.target.value)}
+            />
           </div>
 
-          <button className="clear-filters-btn">Clear All Filters</button>
+          <button className="clear-filters-btn" onClick={clearAllFilters}>Clear All Filters</button>
         </div>
 
         <div className="main-content">
@@ -338,8 +488,8 @@ export default function Home({ searchQuery: propSearchQuery }) {
                 fontSize: '18px', 
                 padding: '40px' 
               }}>
-                {searchQuery.trim() !== ""
-                  ? `No PGs found matching "${searchQuery}". Try a different search term.`
+                {searchQuery.trim() !== "" || filters.gender.length > 0 || filters.amenities.length > 0
+                  ? `No PGs found matching your filters. Try adjusting your search criteria.`
                   : "No PGs found within your budget. Try adjusting the price filter."}
               </p>
             )}

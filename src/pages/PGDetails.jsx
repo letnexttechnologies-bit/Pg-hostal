@@ -150,7 +150,7 @@ export default function PGDetails() {
             </div>
             <div className="price-badge">
               <span className="price-label">Starting from</span>
-              <span className="price-value">₹{pg.price?.toLocaleString()}/month</span>
+              <span className="price-value-pgd">₹{pg.price?.toLocaleString()}/month</span>
             </div>
           </div>
 
@@ -161,6 +161,13 @@ export default function PGDetails() {
               <div>
                 <span className="info-label">Gender</span>
                 <span className="info-value">{pg.gender}</span>
+              </div>
+            </div>
+            <div className="info-card">
+              <HomeIcon size={20} />
+              <div>
+                <span className="info-label">Stay Type</span>
+                <span className="info-value">{pg.stayType || "Not specified"}</span>
               </div>
             </div>
             <div className="info-card">

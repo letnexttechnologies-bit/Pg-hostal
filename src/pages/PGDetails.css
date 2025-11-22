@@ -1,7 +1,7 @@
 .pg-details-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 100px 20px 40px;
+  padding: 10px 0px 10px;
   min-height: 100vh;
 }
 
@@ -159,8 +159,9 @@
   letter-spacing: 1px;
 }
 
-.price-value {
+.price-value-pgd {
   font-size: 28px;
+  color: #f0f0f0;
   font-weight: 700;
   margin-top: 5px;
 }
