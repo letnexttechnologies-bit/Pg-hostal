@@ -14,6 +14,7 @@ export default function Home({ searchQuery: propSearchQuery }) {
   const [wishlist, setWishlist] = useState([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     stayType: [],
     sharingType: [],
@@ -21,6 +22,7 @@ export default function Home({ searchQuery: propSearchQuery }) {
     amenities: [],
     locality: ""
   });
+
   useEffect(() => {
     if (propSearchQuery !== undefined) {
       setSearchQuery(propSearchQuery);
@@ -113,7 +115,6 @@ export default function Home({ searchQuery: propSearchQuery }) {
       const currentValues = prev[category];
       
       if (Array.isArray(currentValues)) {
-        
         if (currentValues.includes(value)) {
           return {
             ...prev,
@@ -126,7 +127,6 @@ export default function Home({ searchQuery: propSearchQuery }) {
           };
         }
       } else {
-        
         return {
           ...prev,
           [category]: value
@@ -193,7 +193,6 @@ export default function Home({ searchQuery: propSearchQuery }) {
     return wishlist.some(item => item.id === pgId);
   };
 
-  
   const filteredPGs = pgsWithDistance.filter(pg => {
     const matchesPrice = pg.price <= maxPrice;
     const matchesSearch = searchQuery.trim() === "" || 
@@ -247,15 +246,27 @@ export default function Home({ searchQuery: propSearchQuery }) {
         </svg>
       </div>
 
+      {/* Hamburger Filter Toggle Button */}
       <button
-        className="show-map-btn"
-        onClick={() => setShowMap(!showMap)}
+        className={`mobile-filter-toggle ${showFilters ? 'active' : ''}`}
+        onClick={() => setShowFilters(!showFilters)}
+        aria-label="Toggle filters"
       >
-        {showMap ? "Hide Map" : "Show Map"}
+        <div className="hamburger-icon">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
       </button>
 
+      {/* Overlay */}
+      <div 
+        className={`filter-overlay ${showFilters ? 'show' : ''}`}
+        onClick={() => setShowFilters(false)}
+      ></div>
+
       <div className="home-layout">
-        <div className="sidebar">
+        <div className={`sidebar ${showFilters ? 'show' : ''}`}>
           <h3>Filters</h3>
 
           <div className="filter-group">
@@ -394,7 +405,7 @@ export default function Home({ searchQuery: propSearchQuery }) {
             </label>
           </div>
 
-          <div className="filter-group">
+          {/* <div className="filter-group">
             <p>Locality</p>
             <input 
               type="text" 
@@ -402,7 +413,7 @@ export default function Home({ searchQuery: propSearchQuery }) {
               value={filters.locality}
               onChange={(e) => handleFilterChange('locality', e.target.value)}
             />
-          </div>
+          </div> */}
 
           <button className="clear-filters-btn" onClick={clearAllFilters}>Clear All Filters</button>
         </div>

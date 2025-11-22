@@ -1,8 +1,39 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ArrowLeft, MapPin, Users, Home as HomeIcon, Wifi, Car, Utensils, Dumbbell, Wind, Battery, Heart } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import pgList from "../data/pgList";
 import "./PGDetails.css";
+
+// Fix for default marker icon in react-leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// Custom PG marker icon (gold)
+const pgIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Custom User Location marker icon (blue)
+const userIcon = new L.Icon({
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 export default function PGDetails() {
   const { id } = useParams();
@@ -10,6 +41,7 @@ export default function PGDetails() {
   const [pg, setPG] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {
     const foundPG = pgList.find(p => p.id === parseInt(id));
@@ -23,6 +55,18 @@ export default function PGDetails() {
     if (saved) {
       setWishlist(JSON.parse(saved));
     }
+
+    // Get user's current location
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+      },
+      (error) => {
+        console.error("Location error:", error);
+        // Default to Chennai if location access denied
+        setUserLocation([12.9716, 80.2209]);
+      }
+    );
   }, [id, navigate]);
 
   const checkUserLoggedIn = () => {
@@ -131,6 +175,71 @@ export default function PGDetails() {
               ))}
             </div>
           )}
+
+          {/* Dynamic Map Under Image - Shows both PG and User Location */}
+          {pg.latitude && pg.longitude && userLocation && (
+            <div className="map-section-gallery">
+              <h3>📍 Location</h3>
+              <div className="pg-details-map">
+                <MapContainer
+                  center={[pg.latitude, pg.longitude]}
+                  zoom={13}
+                  style={{ height: "100%", width: "100%", borderRadius: "12px" }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  
+                  {/* PG Location Marker (Gold) */}
+                  <Marker position={[pg.latitude, pg.longitude]} icon={pgIcon}>
+                    <Popup>
+                      <div style={{ textAlign: "center" }}>
+                        <strong style={{ color: "#d4af37" }}>🏠 {pg.name}</strong>
+                        <br />
+                        <span style={{ fontSize: "12px", color: "#666" }}>
+                          {pg.location}
+                        </span>
+                        <br />
+                        <span style={{ fontSize: "11px", color: "#999", fontStyle: "italic" }}>
+                          PG Location
+                        </span>
+                      </div>
+                    </Popup>
+                  </Marker>
+
+                  {/* User Location Marker (Blue) */}
+                  <Marker position={userLocation} icon={userIcon}>
+                    <Popup>
+                      <div style={{ textAlign: "center" }}>
+                        <strong style={{ color: "#2196F3" }}>📍 Your Location</strong>
+                        <br />
+                        <span style={{ fontSize: "12px", color: "#666" }}>
+                          You are here
+                        </span>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+              
+              <div className="map-legend">
+                <div className="legend-item">
+                  <div className="legend-marker legend-marker-gold"></div>
+                  <span>PG Location</span>
+                </div>
+                <div className="legend-item">
+                  <div className="legend-marker legend-marker-blue"></div>
+                  <span>Your Location</span>
+                </div>
+              </div>
+              
+              <p className="map-address">
+                <MapPin size={16} />
+                {pg.address || pg.location}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="details-section">
@@ -198,7 +307,6 @@ export default function PGDetails() {
             </div>
           )}
 
-
           {pg.rules && pg.rules.length > 0 && (
             <div className="rules-section">
               <h2>House Rules</h2>
@@ -209,7 +317,6 @@ export default function PGDetails() {
               </ul>
             </div>
           )}
-
 
           <div className="contact-section">
             <h2>Contact Information</h2>

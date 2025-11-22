@@ -186,14 +186,14 @@ export default function Navbar() {
           </div>
         )}
 
-        <button 
+        {/* <button 
           className={`mobile-menu-toggle ${showMobileMenu ? "active" : ""}`}
           onClick={() => setShowMobileMenu(!showMobileMenu)}
         >
           <span></span>
           <span></span>
           <span></span>
-        </button>
+        </button> */}
       </div>
     </nav>
   );
