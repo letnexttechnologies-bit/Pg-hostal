@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Users, Home as HomeIcon, Wifi, Car, Utensils, Dumbbell, Wind, Battery, Heart } from "lucide-react";
+import { ArrowLeft, MapPin, Users, Home as HomeIcon, Wifi, Car, Utensils, Dumbbell, Wind, Battery, Heart, X, Phone, Mail, Calendar, User } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -42,6 +42,30 @@ export default function PGDetails() {
   const [wishlist, setWishlist] = useState([]);
   const [selectedImage, setSelectedImage] = useState(0);
   const [userLocation, setUserLocation] = useState(null);
+  const [distance, setDistance] = useState(null);
+  const [showContactPopup, setShowContactPopup] = useState(false);
+  const [showVisitPopup, setShowVisitPopup] = useState(false);
+  const [visitForm, setVisitForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    date: '',
+    time: '',
+    message: ''
+  });
+
+  // Calculate distance between two coordinates
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) ** 2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  };
 
   useEffect(() => {
     const foundPG = pgList.find(p => p.id === parseInt(id));
@@ -59,12 +83,35 @@ export default function PGDetails() {
     // Get user's current location
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        const userCoords = [pos.coords.latitude, pos.coords.longitude];
+        setUserLocation(userCoords);
+        
+        // Calculate distance if PG has coordinates
+        if (foundPG && foundPG.latitude && foundPG.longitude) {
+          const dist = calculateDistance(
+            userCoords[0],
+            userCoords[1],
+            foundPG.latitude,
+            foundPG.longitude
+          );
+          setDistance(dist.toFixed(2));
+        }
       },
       (error) => {
         console.error("Location error:", error);
         // Default to Chennai if location access denied
-        setUserLocation([12.9716, 80.2209]);
+        const defaultCoords = [12.9716, 80.2209];
+        setUserLocation(defaultCoords);
+        
+        if (foundPG && foundPG.latitude && foundPG.longitude) {
+          const dist = calculateDistance(
+            defaultCoords[0],
+            defaultCoords[1],
+            foundPG.latitude,
+            foundPG.longitude
+          );
+          setDistance(dist.toFixed(2));
+        }
       }
     );
   }, [id, navigate]);
@@ -100,6 +147,29 @@ export default function PGDetails() {
     
     setWishlist(updated);
     localStorage.setItem('pgWishlist', JSON.stringify(updated));
+  };
+
+  const handleVisitFormChange = (e) => {
+    setVisitForm({
+      ...visitForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleScheduleVisit = (e) => {
+    e.preventDefault();
+    // Here you would typically send this data to your backend
+    console.log('Visit scheduled:', visitForm);
+    alert('Visit request submitted! The owner will contact you soon.');
+    setShowVisitPopup(false);
+    setVisitForm({
+      name: '',
+      phone: '',
+      email: '',
+      date: '',
+      time: '',
+      message: ''
+    });
   };
 
   const isInWishlist = pg && wishlist.some(item => item.id === pg.id);
@@ -283,7 +353,7 @@ export default function PGDetails() {
               <MapPin size={20} />
               <div>
                 <span className="info-label">Distance</span>
-                <span className="info-value">{pg.distance || "N/A"} km away</span>
+                <span className="info-value">{distance || "Calculating..."} km away</span>
               </div>
             </div>
           </div>
@@ -343,15 +413,165 @@ export default function PGDetails() {
           </div>
 
           <div className="action-buttons">
-            <button className="btn-primary" onClick={() => alert('Contact owner feature coming soon!')}>
+            <button className="btn-primary" onClick={() => setShowContactPopup(true)}>
               Contact Owner
             </button>
-            <button className="btn-secondary" onClick={() => alert('Schedule visit feature coming soon!')}>
+            <button className="btn-secondary" onClick={() => setShowVisitPopup(true)}>
               Schedule Visit
             </button>
           </div>
         </div>
       </div>
+
+      {/* Contact Owner Popup */}
+      {showContactPopup && (
+        <>
+          <div className="popup-overlay" onClick={() => setShowContactPopup(false)}></div>
+          <div className="popup-container">
+            <div className="popup-header">
+              <h2>Contact Owner</h2>
+              <button className="popup-close" onClick={() => setShowContactPopup(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <div className="popup-content">
+              <div className="contact-details">
+                <div className="contact-detail-item">
+                  <Phone size={20} />
+                  <div>
+                    <p className="contact-detail-label">Phone Number</p>
+                    <a href={`tel:${pg.phone || '+91 9876543210'}`} className="contact-detail-value">
+                      {pg.phone || '+91 9876543210'}
+                    </a>
+                  </div>
+                </div>
+                <div className="contact-detail-item">
+                  <Mail size={20} />
+                  <div>
+                    <p className="contact-detail-label">Email Address</p>
+                    <a href={`mailto:${pg.email || 'owner@example.com'}`} className="contact-detail-value">
+                      {pg.email || 'owner@example.com'}
+                    </a>
+                  </div>
+                </div>
+                <div className="contact-detail-item">
+                  <User size={20} />
+                  <div>
+                    <p className="contact-detail-label">Owner Name</p>
+                    <p className="contact-detail-value">{pg.ownerName || 'Property Owner'}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="popup-actions">
+                <a href={`tel:${pg.phone || '+91 9876543210'}`} className="popup-btn-primary">
+                  <Phone size={18} />
+                  Call Now
+                </a>
+                <a href={`mailto:${pg.email || 'owner@example.com'}`} className="popup-btn-secondary">
+                  <Mail size={18} />
+                  Send Email
+                </a>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Schedule Visit Popup */}
+      {showVisitPopup && (
+        <>
+          <div className="popup-overlay" onClick={() => setShowVisitPopup(false)}></div>
+          <div className="popup-container">
+            <div className="popup-header">
+              <h2>Schedule a Visit</h2>
+              <button className="popup-close" onClick={() => setShowVisitPopup(false)}>
+                <X size={24} />
+              </button>
+            </div>
+            <div className="popup-content">
+              <form onSubmit={handleScheduleVisit} className="visit-form">
+                <div className="form-group">
+                  <label>Your Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={visitForm.name}
+                    onChange={handleVisitFormChange}
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Phone Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={visitForm.phone}
+                      onChange={handleVisitFormChange}
+                      placeholder="+91 98765 43210"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email Address *</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={visitForm.email}
+                      onChange={handleVisitFormChange}
+                      placeholder="your@email.com"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Preferred Date *</label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={visitForm.date}
+                      onChange={handleVisitFormChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Preferred Time *</label>
+                    <input
+                      type="time"
+                      name="time"
+                      value={visitForm.time}
+                      onChange={handleVisitFormChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Message (Optional)</label>
+                  <textarea
+                    name="message"
+                    value={visitForm.message}
+                    onChange={handleVisitFormChange}
+                    placeholder="Any specific requirements or questions..."
+                    rows="3"
+                  ></textarea>
+                </div>
+                <div className="popup-actions">
+                  <button type="submit" className="popup-btn-primary">
+                    <Calendar size={18} />
+                    Confirm Visit
+                  </button>
+                  <button type="button" className="popup-btn-secondary" onClick={() => setShowVisitPopup(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

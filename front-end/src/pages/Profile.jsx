@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X, Camera } from "lucide-react";
 import "./Profile.css";
 
 export default function Profile() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,6 +33,7 @@ export default function Profile() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
+      setProfilePhoto(parsedUser.profilePhoto || null);
       setFormData({
         name: parsedUser.name || "",
         email: parsedUser.email || "",
@@ -52,11 +55,63 @@ export default function Profile() {
     }));
   };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size should be less than 5MB');
+        return;
+      }
+
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setProfilePhoto(base64String);
+        
+        // Auto-save photo to user data
+        const updatedUser = {
+          ...user,
+          profilePhoto: base64String
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        // Trigger storage event
+        window.dispatchEvent(new Event('storage'));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleChangePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemovePhoto = () => {
+    setProfilePhoto(null);
+    const updatedUser = {
+      ...user,
+      profilePhoto: null
+    };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    window.dispatchEvent(new Event('storage'));
+  };
+
   const handleSave = () => {
     // Update user data
     const updatedUser = {
       ...user,
-      ...formData
+      ...formData,
+      profilePhoto: profilePhoto
     };
     
     localStorage.setItem("user", JSON.stringify(updatedUser));
@@ -82,6 +137,7 @@ export default function Profile() {
         occupation: user.occupation || "",
         bio: user.bio || ""
       });
+      setProfilePhoto(user.profilePhoto || null);
     }
     setIsEditing(false);
   };
@@ -101,12 +157,39 @@ export default function Profile() {
         <div className="profile-header">
           <div className="profile-avatar-section">
             <div className="profile-avatar-large">
-              {formData.name?.charAt(0).toUpperCase() || "U"}
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="Profile" className="profile-photo" />
+              ) : (
+                <span className="profile-initial">
+                  {formData.name?.charAt(0).toUpperCase() || "U"}
+                </span>
+              )}
             </div>
-            <button className="change-avatar-btn">
-              <Camera size={18} />
-              <span>Change Photo</span>
-            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              style={{ display: 'none' }}
+            />
+            <div className="photo-buttons">
+              <button 
+                className="change-avatar-btn"
+                onClick={handleChangePhotoClick}
+              >
+                <Camera size={18} />
+                <span>Change Photo</span>
+              </button>
+              {profilePhoto && (
+                <button 
+                  className="remove-avatar-btn"
+                  onClick={handleRemovePhoto}
+                >
+                  <X size={18} />
+                  <span>Remove</span>
+                </button>
+              )}
+            </div>
           </div>
           
           <div className="profile-header-info">

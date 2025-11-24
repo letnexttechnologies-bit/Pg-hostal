@@ -2,11 +2,11 @@ import { Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Login from './pages/login';
+import Login from './pages/Login';
 import Wishlist from './pages/Wishlist';
 import Profile from './pages/Profile';
 import PGDetails from './pages/PGDetails';
-import './App.css';
+import Settings from './pages/Settings';
 
 function App() {
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
@@ -27,6 +27,7 @@ function App() {
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/pg/:id" element={<PGDetails />} />
+         <Route path="/settings" element={<Settings />} />
       </Routes>
     </div>
   );

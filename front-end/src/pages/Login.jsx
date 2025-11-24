@@ -2,6 +2,18 @@ import { useState } from "react";
 import "./login.css";
 
 export default function Login() {
+  const DEFAULT_USER = {
+    name: "Test User",
+    email: "test@example.com",
+    password: "password123"
+  };
+
+  useState(() => {
+    if (!localStorage.getItem("user")) {
+      localStorage.setItem("user", JSON.stringify(DEFAULT_USER));
+    }
+  });
+  
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

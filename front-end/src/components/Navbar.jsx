@@ -36,13 +36,17 @@ export default function Navbar() {
       }
     };
 
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+
     window.addEventListener("scroll", handleScroll);
-    window.addEventListener("storage", checkAuth);
+    window.addEventListener("storage", handleStorageChange);
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("storage", checkAuth);
+      window.removeEventListener("storage", handleStorageChange);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
@@ -116,7 +120,15 @@ export default function Navbar() {
               aria-label="Profile menu"
             >
               <span className="profile-avatar">
-                {user?.name?.charAt(0).toUpperCase() || "U"}
+                {user?.profilePhoto ? (
+                  <img 
+                    src={user.profilePhoto} 
+                    alt="Profile" 
+                    className="profile-avatar-img"
+                  />
+                ) : (
+                  user?.name?.charAt(0).toUpperCase() || "U"
+                )}
               </span>
             </button>
 
@@ -124,7 +136,15 @@ export default function Navbar() {
               <div className="profile-dropdown">
                 <div className="dropdown-header">
                   <div className="user-avatar-large">
-                    {user?.name?.charAt(0).toUpperCase() || "U"}
+                    {user?.profilePhoto ? (
+                      <img 
+                        src={user.profilePhoto} 
+                        alt="Profile" 
+                        className="user-avatar-img"
+                      />
+                    ) : (
+                      user?.name?.charAt(0).toUpperCase() || "U"
+                    )}
                   </div>
                   <div className="user-info-dropdown">
                     <p className="user-name-dropdown">{user?.name || "User"}</p>
@@ -132,7 +152,7 @@ export default function Navbar() {
                   </div>
                 </div>
 
-                <div className="dropdown-divider"></div>
+                <div className="dropdown-divider"></div> 
 
                 <button 
                   className="dropdown-item"
@@ -167,7 +187,13 @@ export default function Navbar() {
                   <span>My Profile</span>
                 </button>
 
-                <button className="dropdown-item">
+                <button 
+                  className="dropdown-item"
+                  onClick={() => {
+                    navigate("/settings");
+                    setShowProfileDropdown(false);
+                  }}
+                >
                   <Settings size={18} />
                   <span>Settings</span>
                 </button>
@@ -185,15 +211,6 @@ export default function Navbar() {
             )}
           </div>
         )}
-
-        {/* <button 
-          className={`mobile-menu-toggle ${showMobileMenu ? "active" : ""}`}
-          onClick={() => setShowMobileMenu(!showMobileMenu)}
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button> */}
       </div>
     </nav>
   );
