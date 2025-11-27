@@ -64,6 +64,9 @@ export default function Home({ searchQuery: propSearchQuery }) {
           
           navigate('/', { replace: true, state: {} });
         }
+      } else {
+        // Clear wishlist when user is not logged in
+        setWishlist([]);
       }
     };
 

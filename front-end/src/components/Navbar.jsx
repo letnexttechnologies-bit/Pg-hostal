@@ -69,15 +69,17 @@ export default function Navbar() {
     if (window.confirm("Are you sure you want to logout?")) {
       localStorage.removeItem("loggedIn");
       localStorage.removeItem("authToken");
+      localStorage.removeItem("wishlist");
       
       setLoggedIn(false);
       setUser(null);
       setShowProfileDropdown(false);
       
       window.dispatchEvent(new Event('storage'));
-      navigate("/login");
+      // Stay on current page instead of navigating to login
     }
   };
+
 
   const toggleProfileDropdown = () => {
     setShowProfileDropdown(!showProfileDropdown);
