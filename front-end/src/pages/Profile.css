@@ -1,8 +1,8 @@
+/* Container */
 .profile-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 10px;
-  padding-top: 20px;
+  padding: 20px;
   min-height: 100vh;
 }
 
@@ -35,6 +35,7 @@
   flex-direction: column;
   align-items: center;
   gap: 15px;
+  flex-shrink: 0;
 }
 
 .profile-avatar-large {
@@ -51,47 +52,99 @@
   color: #fff;
   border: 5px solid rgba(255, 255, 255, 0.3);
   text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.profile-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.profile-initial {
+  font-size: 60px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 1;
+}
+
+.photo-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.change-avatar-btn,
+.remove-avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  white-space: nowrap;
 }
 
 .change-avatar-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
   color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .change-avatar-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.remove-avatar-btn {
+  background: #fff;
+  color: #d4af37;
+  border: 2px solid #fff;
+}
+
+.remove-avatar-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .profile-header-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .profile-header-info h1 {
   font-size: 36px;
-  margin-bottom: 8px;
+  margin: 0;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .profile-email {
   font-size: 16px;
   opacity: 0.9;
-  margin-bottom: 20px;
+  margin: 0 0 20px 0;
 }
 
 .profile-actions {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .edit-profile-btn,
@@ -99,14 +152,15 @@
 .cancel-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: none;
   font-size: 15px;
+  white-space: nowrap;
 }
 
 .edit-profile-btn {
@@ -119,21 +173,25 @@
 .edit-profile-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .edit-actions {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .save-btn {
   background: #fff;
   color: #d4af37;
+  border: 2px solid #fff;
 }
 
 .save-btn:hover {
   background: #f8f8f8;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cancel-btn {
@@ -144,91 +202,7 @@
 
 .cancel-btn:hover {
   background: rgba(255, 255, 255, 0.1);
-}
-
-.profile-avatar-large {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #d4af37 0%, #f2d06b 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
-  overflow: hidden;
-  position: relative;
-  border: 3px solid #d4af37;
-}
-
-.profile-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.profile-initial {
-  font-size: 48px;
-  font-weight: 600;
-  color: white;
-  z-index: 1;
-}
-
-.photo-buttons {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.change-avatar-btn {
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #d4af37 0%, #f2d06b 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
-}
-
-.change-avatar-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
-}
-
-.remove-avatar-btn {
-  padding: 10px 20px;
-  background: white;
-  color: #d4af37;
-  border: 2px solid #d4af37;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s;
-}
-
-.remove-avatar-btn:hover {
-  background: #d4af37;
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Profile Sections */
@@ -247,9 +221,10 @@
 .section-title {
   font-size: 24px;
   color: #333;
-  margin-bottom: 24px;
+  margin: 0 0 24px 0;
   padding-bottom: 12px;
   border-bottom: 2px solid #f0f0f0;
+  font-weight: 700;
 }
 
 /* Info Grid */
@@ -278,6 +253,7 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .info-field p {
@@ -289,6 +265,8 @@
   min-height: 44px;
   display: flex;
   align-items: center;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .info-field input,
@@ -300,6 +278,7 @@
   font-size: 15px;
   transition: all 0.3s ease;
   font-family: inherit;
+  line-height: 1.5;
 }
 
 .info-field input:focus,
@@ -348,24 +327,30 @@
   justify-content: center;
   border-radius: 12px;
   background: #fff;
+  flex-shrink: 0;
 }
 
 .stat-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .stat-value {
   font-size: 28px;
   font-weight: 700;
   color: #333;
+  line-height: 1;
+  margin: 0;
 }
 
 .stat-label {
   font-size: 13px;
   color: #666;
   font-weight: 500;
+  line-height: 1.2;
+  margin: 0;
 }
 
 /* Quick Actions */
@@ -379,6 +364,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 24px;
   background: #f8f9fa;
@@ -386,6 +372,7 @@
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 140px;
 }
 
 .action-card:hover {
@@ -404,6 +391,7 @@
   justify-content: center;
   background: #fff;
   border-radius: 12px;
+  flex-shrink: 0;
 }
 
 .action-text {
@@ -411,6 +399,8 @@
   font-weight: 600;
   color: #333;
   text-align: center;
+  line-height: 1.4;
+  margin: 0;
 }
 
 /* Responsive Design */
@@ -424,14 +414,27 @@
 @media (max-width: 768px) {
   .profile-container {
     padding: 10px;
-    padding-top: 20px;
   }
 
   .profile-header {
     flex-direction: column;
     text-align: center;
     padding: 30px 20px;
-    gap: 20px;
+    gap: 24px;
+  }
+
+  .profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    font-size: 48px;
+  }
+
+  .profile-initial {
+    font-size: 48px;
+  }
+
+  .profile-header-info {
+    align-items: center;
   }
 
   .profile-header-info h1 {
@@ -440,6 +443,7 @@
 
   .profile-actions {
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .profile-sections {
@@ -455,10 +459,7 @@
     grid-template-columns: 1fr;
   }
 
-  .stat-card {
-    padding: 20px;
-  }
-
+  .stat-card,
   .action-card {
     padding: 20px;
   }
@@ -471,18 +472,52 @@
   .save-btn,
   .cancel-btn {
     width: 100%;
-    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
+  .profile-container {
+    padding: 10px;
+  }
+
+  .profile-header {
+    padding: 24px 16px;
+  }
+
   .profile-avatar-large {
-    width: 120px;
-    height: 120px;
-    font-size: 48px;
+    width: 100px;
+    height: 100px;
+    font-size: 40px;
+    border-width: 3px;
+  }
+
+  .profile-initial {
+    font-size: 40px;
+  }
+
+  .profile-header-info h1 {
+    font-size: 24px;
+  }
+
+  .profile-email {
+    font-size: 14px;
   }
 
   .section-title {
     font-size: 20px;
+  }
+
+  .profile-sections {
+    padding: 20px 16px;
+  }
+
+  .photo-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .change-avatar-btn,
+  .remove-avatar-btn {
+    width: 100%;
   }
 }
