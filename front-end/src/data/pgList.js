@@ -12,7 +12,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Fridge", "Power Backup"],
     latitude: 11.4549,
     longitude: 77.4365,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80"
   },
   {
     id: 2,
@@ -27,7 +27,7 @@ const pgList = [
     amenities: ["Parking", "WiFi", "Power Backup"],
     latitude: 11.4580,
     longitude: 77.4340,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&q=80"
   },
   {
     id: 3,
@@ -42,7 +42,7 @@ const pgList = [
     amenities: ["WiFi", "Gym", "Food", "AC", "Fridge"],
     latitude: 11.4520,
     longitude: 77.4400,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1505693314120-0d443867891c?w=800&q=80"
   },
   {
     id: 4,
@@ -57,7 +57,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Parking"],
     latitude: 11.4600,
     longitude: 77.4320,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=800&q=80"
   },
   {
     id: 5,
@@ -72,7 +72,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Fridge", "Parking"],
     latitude: 11.4565,
     longitude: 77.4380,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
   },
   {
     id: 6,
@@ -87,7 +87,7 @@ const pgList = [
     amenities: ["AC", "WiFi", "Gym", "Food", "Fridge", "Power Backup"],
     latitude: 11.4540,
     longitude: 77.4355,
-    image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800&q=80"
   },
   {
     id: 7,
@@ -102,7 +102,7 @@ const pgList = [
     amenities: ["WiFi", "Parking", "Power Backup"],
     latitude: 11.4510,
     longitude: 77.4410,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&q=80"
   },
   {
     id: 8,
@@ -117,7 +117,7 @@ const pgList = [
     amenities: ["AC", "WiFi", "Gym", "Food", "Fridge", "Parking", "Power Backup"],
     latitude: 11.4590,
     longitude: 77.4390,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80"
   },
   {
     id: 9,
@@ -132,7 +132,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Power Backup"],
     latitude: 11.4575,
     longitude: 77.4330,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?w=800&q=80"
   },
   {
     id: 10,
@@ -147,7 +147,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "AC", "Fridge", "Parking"],
     latitude: 11.4530,
     longitude: 77.4370,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=800&q=80"
   },
   {
     id: 11,
@@ -162,7 +162,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Parking", "Power Backup"],
     latitude: 11.4560,
     longitude: 77.4345,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80"
   },
   {
     id: 12,
@@ -177,7 +177,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Fridge", "AC", "Power Backup"],
     latitude: 11.4555,
     longitude: 77.4385,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800&q=80"
   },
   {
     id: 13,
@@ -192,7 +192,7 @@ const pgList = [
     amenities: ["WiFi", "Parking", "Power Backup"],
     latitude: 11.4585,
     longitude: 77.4360,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80"
   },
   {
     id: 14,
@@ -207,22 +207,7 @@ const pgList = [
     amenities: ["AC", "WiFi", "Food", "Gym", "Fridge", "Parking"],
     latitude: 11.4545,
     longitude: 77.4395,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
-  },
-  {
-    id: 15,
-    name: "Sunrise PG",
-    location: "Bhavani Road, Gobichettipalayam",
-    price: 4300,
-    gender: "Male",
-    rating: 4.0,
-    facilities: ["WiFi", "Food"],
-    stayType: "Student Living",
-    sharingType: "3 Sharing",
-    amenities: ["WiFi", "Food", "Power Backup"],
-    latitude: 11.4570,
-    longitude: 77.4375,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=800&q=80"
   },
   {
     id: 16,
@@ -237,7 +222,7 @@ const pgList = [
     amenities: ["WiFi", "Parking", "Power Backup"],
     latitude: 11.4595,
     longitude: 77.4350,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"
   },
   {
     id: 17,
@@ -252,7 +237,7 @@ const pgList = [
     amenities: ["AC", "WiFi", "Food", "Fridge", "Power Backup", "CCTV"],
     latitude: 11.4525,
     longitude: 77.4375,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=800&q=80"
   },
   {
     id: 18,
@@ -282,7 +267,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "AC", "Fridge", "Study Room", "Power Backup"],
     latitude: 11.4535,
     longitude: 77.4388,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1560448204-603b3fc33ddc?w=800&q=80"
   },
   {
     id: 20,
@@ -297,7 +282,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Parking", "Power Backup"],
     latitude: 11.4568,
     longitude: 77.4358,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80"
   },
   {
     id: 21,
@@ -312,22 +297,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "AC", "Fridge", "Parking"],
     latitude: 11.4558,
     longitude: 77.4368,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"
-  },
-  {
-    id: 22,
-    name: "Sri Krishna Boys Hostel",
-    location: "Chennimalai Road, Gobichettipalayam",
-    price: 3700,
-    gender: "Male",
-    rating: 3.9,
-    facilities: ["WiFi", "Parking"],
-    stayType: "Student Living",
-    sharingType: "4 Sharing",
-    amenities: ["WiFi", "Parking", "Power Backup"],
-    latitude: 11.4605,
-    longitude: 77.4335,
-    image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=800&q=80"
   },
   {
     id: 23,
@@ -342,7 +312,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "AC", "Fridge", "CCTV", "Power Backup"],
     latitude: 11.4515,
     longitude: 77.4392,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1600573472592-401b489a3cdc?w=800&q=80"
   },
   {
     id: 24,
@@ -357,22 +327,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Gym", "Fridge", "Parking"],
     latitude: 11.4572,
     longitude: 77.4362,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"
-  },
-  {
-    id: 25,
-    name: "Vijay Residency",
-    location: "NGO Colony, Gobichettipalayam",
-    price: 4350,
-    gender: "Male",
-    rating: 4.1,
-    facilities: ["WiFi", "Food", "Parking"],
-    stayType: "Student Living",
-    sharingType: "3 Sharing",
-    amenities: ["WiFi", "Food", "Parking", "Power Backup"],
-    latitude: 11.4562,
-    longitude: 77.4352,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=800&q=80"
   },
   {
     id: 26,
@@ -387,21 +342,6 @@ const pgList = [
     amenities: ["AC", "WiFi", "Food", "Gym", "Fridge", "CCTV", "Power Backup"],
     latitude: 11.4542,
     longitude: 77.4378,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
-  },
-  {
-    id: 27,
-    name: "Economy Stay PG",
-    location: "Old Bus Stand Road, Gobichettipalayam",
-    price: 3600,
-    gender: "Male",
-    rating: 3.8,
-    facilities: ["WiFi"],
-    stayType: "Student Living",
-    sharingType: "4 Sharing",
-    amenities: ["WiFi", "Power Backup"],
-    latitude: 11.4588,
-    longitude: 77.4372,
     image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&q=80"
   },
   {
@@ -417,7 +357,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Fridge", "Parking", "Power Backup"],
     latitude: 11.4551,
     longitude: 77.4383,
-    image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1505873242700-f289a29e1e0f?w=800&q=80"
   },
   {
     id: 29,
@@ -432,7 +372,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "AC", "Fridge", "Study Room", "Power Backup"],
     latitude: 11.4533,
     longitude: 77.4361,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1556912173-46c336c7fd55?w=800&q=80"
   },
   {
     id: 30,
@@ -447,7 +387,7 @@ const pgList = [
     amenities: ["WiFi", "Food", "Parking", "Power Backup"],
     latitude: 11.4578,
     longitude: 77.4348,
-    image: "https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80"
+    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=800&q=80"
   }
 ];
 

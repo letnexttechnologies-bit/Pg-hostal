@@ -32,7 +32,7 @@ body, html {
 
 /* Hamburger Filter Toggle Button */
 .mobile-filter-toggle {
-  position: fixed;
+  position: absolute;
   top: 90px;
   left: 20px;
   z-index: 1000;
@@ -62,7 +62,7 @@ body, html {
 }
 
 .mobile-filter-toggle.active {
-  position: fixed;
+  position: absolute;
   top: 20px;
   left: 270px;
   transform: none;
@@ -75,7 +75,7 @@ body, html {
 .hamburger-icon {
   width: 22px;
   height: 16px;
-  position: absolute;
+  position:absolute;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
