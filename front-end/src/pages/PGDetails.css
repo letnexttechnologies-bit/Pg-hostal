@@ -41,74 +41,270 @@
     top: 100px;
     height: fit-content;
   }
+.main-image {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f5f5f5;
+  margin-bottom: 16px;
+}
 
+.main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.main-image:hover img {
+  transform: scale(1.02);
+}
+
+/* Main Image Navigation Arrows */
+.main-image-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.main-image:hover .main-image-nav-btn {
+  opacity: 1;
+}
+
+.main-image-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.8);
+  transform: translateY(-50%) scale(1.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.main-image-nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.main-image-nav-btn.prev-btn {
+  left: 20px;
+}
+
+.main-image-nav-btn.next-btn {
+  right: 20px;
+}
+
+/* Main Image Counter Badge */
+.main-image-counter {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Thumbnail Gallery Enhancements */
+.thumbnail-gallery {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px;
+  margin-bottom: 24px;
+  scroll-behavior: smooth;
+}
+
+.thumbnail-gallery::-webkit-scrollbar {
+  height: 8px;
+}
+
+.thumbnail-gallery::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.thumbnail-gallery::-webkit-scrollbar-thumb {
+  background: #d4af37;
+  border-radius: 4px;
+}
+
+.thumbnail-gallery::-webkit-scrollbar-thumb:hover {
+  background: #b8941f;
+}
+
+.thumbnail {
+  position: relative;
+  min-width: 120px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+  background: #f5f5f5;
+}
+
+.thumbnail:hover {
+  border-color: #d4af37;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.thumbnail.active {
+  border-color: #d4af37;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.thumbnail:hover img {
+  transform: scale(1.1);
+}
+
+.thumbnail-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(212, 175, 55, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnail-check {
+  background: #d4af37;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Wishlist Button in Details */
+.wishlist-btn-details {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.wishlist-btn-details:hover {
+  background: white;
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.wishlist-btn-details:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
   .main-image {
-    width: 100%;
-    height: 500px;
-    position: relative;
-    overflow: hidden;
+    height: 300px;
+    border-radius: 12px;
   }
 
-  .main-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .main-image-nav-btn {
+    width: 40px;
+    height: 40px;
+    opacity: 1; /* Always show on mobile */
+  }
+
+  .main-image-nav-btn.prev-btn {
+    left: 12px;
+  }
+
+  .main-image-nav-btn.next-btn {
+    right: 12px;
+  }
+
+  .main-image-counter {
+    font-size: 12px;
+    padding: 6px 12px;
+    bottom: 12px;
   }
 
   .wishlist-btn-details {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-  }
-
-  .wishlist-btn-details:hover {
-    background: rgba(212, 175, 55, 0.9);
-    transform: scale(1.1);
-  }
-
-  .thumbnail-gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 10px;
-    padding: 15px;
-    background: #f9f9f9;
+    width: 40px;
+    height: 40px;
+    top: 12px;
+    right: 12px;
   }
 
   .thumbnail {
-    height: 80px;
-    cursor: pointer;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
+    min-width: 100px;
+    height: 70px;
   }
 
-  .thumbnail:hover {
-    border-color: #d4af37;
-    transform: scale(1.05);
+  .thumbnail-gallery {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-image {
+    height: 250px;
   }
 
-  .thumbnail.active {
-    border-color: #d4af37;
-    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  .main-image-nav-btn {
+    width: 36px;
+    height: 36px;
   }
 
-  .thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .thumbnail {
+    min-width: 80px;
+    height: 60px;
   }
+}
+
+/* Animation for loading spinner */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
   /* Details Section */
   .details-section {

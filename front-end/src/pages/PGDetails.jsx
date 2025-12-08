@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Users, Home as HomeIcon, Wifi, Car, Utensils, Dumbbell, Wind, Battery, Heart, X, Phone, Mail, Calendar, User } from "lucide-react";
+import { ArrowLeft, MapPin, Users, Home as HomeIcon, Wifi, Car, Utensils, Dumbbell, Wind, Battery, Heart, X, Phone, Mail, Calendar, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -172,6 +172,33 @@ export default function PGDetails() {
     });
   };
 
+  // Navigation functions for image slideshow
+  const nextImage = () => {
+    if (images.length > 0) {
+      setSelectedImage((prev) => (prev + 1) % images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (images.length > 0) {
+      setSelectedImage((prev) => (prev - 1 + images.length) % images.length);
+    }
+  };
+
+  // Keyboard navigation for images
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        prevImage();
+      } else if (e.key === 'ArrowRight') {
+        nextImage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const isInWishlist = pg && wishlist.some(item => item.id === pg.id);
 
   const getAmenityIcon = (amenity) => {
@@ -205,7 +232,10 @@ export default function PGDetails() {
     );
   }
 
-  const images = [pg.image, ...(pg.additionalImages || [])];
+  // Support both 'images' array and legacy 'image' + 'additionalImages'
+  const images = pg.images && pg.images.length > 0 
+    ? pg.images 
+    : [pg.image, ...(pg.additionalImages || [])].filter(Boolean);
 
   return (
     <div className="pg-details-container">
@@ -217,7 +247,42 @@ export default function PGDetails() {
       <div className="pg-details-content">
         <div className="image-gallery">
           <div className="main-image">
-            <img src={images[selectedImage]} alt={pg.name} />
+            <img 
+              src={images[selectedImage] || 'https://via.placeholder.com/800x600?text=No+Image'} 
+              alt={`${pg.name} - Image ${selectedImage + 1}`}
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/800x600?text=Image+Not+Found';
+              }}
+            />
+            
+            {/* Navigation Arrows for Main Image */}
+            {images.length > 1 && (
+              <>
+                <button 
+                  className="main-image-nav-btn prev-btn"
+                  onClick={prevImage}
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={28} />
+                </button>
+                <button 
+                  className="main-image-nav-btn next-btn"
+                  onClick={nextImage}
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={28} />
+                </button>
+              </>
+            )}
+
+            {/* Image Counter Badge */}
+            {images.length > 1 && (
+              <div className="main-image-counter">
+                {selectedImage + 1} / {images.length}
+              </div>
+            )}
+
+            {/* Wishlist Button */}
             <button 
               className="wishlist-btn-details"
               onClick={toggleWishlist}
@@ -232,6 +297,7 @@ export default function PGDetails() {
             </button>
           </div>
           
+          {/* Thumbnail Gallery */}
           {images.length > 1 && (
             <div className="thumbnail-gallery">
               {images.map((img, index) => (
@@ -240,7 +306,18 @@ export default function PGDetails() {
                   className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
                   onClick={() => setSelectedImage(index)}
                 >
-                  <img src={img} alt={`${pg.name} ${index + 1}`} />
+                  <img 
+                    src={img} 
+                    alt={`${pg.name} ${index + 1}`}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/150x100?text=No+Image';
+                    }}
+                  />
+                  {selectedImage === index && (
+                    <div className="thumbnail-overlay">
+                      <div className="thumbnail-check">✓</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
