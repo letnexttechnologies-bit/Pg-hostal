@@ -284,14 +284,14 @@ export default function PGDetails() {
 
             {/* Wishlist Button */}
             <button 
-              className="wishlist-btn-details"
+              className="wishlist-btn"
               onClick={toggleWishlist}
               aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
             >
               <Heart 
                 size={24} 
                 fill={isInWishlist ? "#ff4444" : "none"}
-                stroke={isInWishlist ? "#ff4444" : "#fff"}
+                stroke={isInWishlist ? "#ff4444" : "#4c4545ff"}
                 strokeWidth={2}
               />
             </button>

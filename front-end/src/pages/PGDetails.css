@@ -210,35 +210,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Wishlist Button in Details */
-.wishlist-btn-details {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border: none;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.wishlist-btn-details:hover {
-  background: white;
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.wishlist-btn-details:active {
-  transform: scale(0.95);
-}
 
 /* Responsive Design for Mobile */
 @media (max-width: 768px) {

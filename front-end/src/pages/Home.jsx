@@ -124,7 +124,7 @@ function PGCard({ pg, onWishlistToggle, isInWishlist, onNavigate }) {
             height="24" 
             viewBox="0 0 24 24" 
             fill={isInWishlist(pg.id) ? "#ff4444" : "none"}
-            stroke={isInWishlist(pg.id) ? "#ff4444" : "#fff"}
+            stroke={isInWishlist(pg.id) ? "#ff4444" : "#4c4545ff"}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
