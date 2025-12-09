@@ -384,7 +384,6 @@ export default function Profile() {
             <h2 className="section-title">Activity</h2>
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon wishlist-icon">❤️</div>
                 <div className="stat-info">
                   <span className="stat-value">
                     {JSON.parse(localStorage.getItem('pgWishlist') || '[]').length}
@@ -394,7 +393,6 @@ export default function Profile() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon bookings-icon">📅</div>
                 <div className="stat-info">
                   <span className="stat-value">0</span>
                   <span className="stat-label">Bookings</span>
@@ -402,7 +400,6 @@ export default function Profile() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon visits-icon">🏠</div>
                 <div className="stat-info">
                   <span className="stat-value">0</span>
                   <span className="stat-label">Visits Scheduled</span>
@@ -410,7 +407,6 @@ export default function Profile() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon reviews-icon">⭐</div>
                 <div className="stat-info">
                   <span className="stat-value">0</span>
                   <span className="stat-label">Reviews</span>
@@ -427,19 +423,15 @@ export default function Profile() {
                 className="action-card"
                 onClick={() => navigate('/wishlist')}
               >
-                <span className="action-icon">❤️</span>
                 <span className="action-text">View Wishlist</span>
               </button>
               <button className="action-card">
-                <span className="action-icon">📅</span>
                 <span className="action-text">My Bookings</span>
               </button>
               <button className="action-card">
-                <span className="action-icon">🔔</span>
                 <span className="action-text">Notifications</span>
               </button>
               <button className="action-card">
-                <span className="action-icon">⚙️</span>
                 <span className="action-text">Settings</span>
               </button>
             </div>

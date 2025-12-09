@@ -187,7 +187,6 @@ body, html {
 }
 
 .sidebar h3::before {
-  content: '🔍';
   font-size: 22px;
 }
 
@@ -685,7 +684,6 @@ body, html {
 }
 
 .pg-card h3::before {
-  content: '🏠';
   font-size: 18px;
 }
 
@@ -747,7 +745,6 @@ body, html {
 }
 
 .pg-card .gender::before {
-  content: '👤';
   font-size: 12px;
 }
 
@@ -759,7 +756,6 @@ body, html {
 }
 
 .pg-card .distance::before {
-  content: '📍';
   font-size: 12px;
 }
 
@@ -995,7 +991,6 @@ body, html {
 }
 
 .location-text::before {
-  content: "📍";
   font-size: 12px;
 }
 

@@ -326,7 +326,7 @@ export default function PGDetails() {
           {/* Dynamic Map Under Image - Shows both PG and User Location */}
           {pg.latitude && pg.longitude && userLocation && (
             <div className="map-section-gallery">
-              <h3>📍 Location</h3>
+              <h3>Location</h3>
               <div className="pg-details-map">
                 <MapContainer
                   center={[pg.latitude, pg.longitude]}
@@ -342,7 +342,7 @@ export default function PGDetails() {
                   <Marker position={[pg.latitude, pg.longitude]} icon={pgIcon}>
                     <Popup>
                       <div style={{ textAlign: "center" }}>
-                        <strong style={{ color: "#d4af37" }}>🏠 {pg.name}</strong>
+                        <strong style={{ color: "#d4af37" }}>{pg.name}</strong>
                         <br />
                         <span style={{ fontSize: "12px", color: "#666" }}>
                           {pg.location}
@@ -359,7 +359,7 @@ export default function PGDetails() {
                   <Marker position={userLocation} icon={userIcon}>
                     <Popup>
                       <div style={{ textAlign: "center" }}>
-                        <strong style={{ color: "#2196F3" }}>📍 Your Location</strong>
+                        <strong style={{ color: "#2196F3" }}>Your Location</strong>
                         <br />
                         <span style={{ fontSize: "12px", color: "#666" }}>
                           You are here

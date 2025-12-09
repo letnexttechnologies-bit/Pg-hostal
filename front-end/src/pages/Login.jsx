@@ -110,7 +110,6 @@ export default function Login() {
 
       <div className="login-card">
         <div className="login-header">
-          <div className="login-icon">🏠</div>
           <h2>{isLogin ? "Welcome Back" : "Create Account"}</h2>
           <p className="login-subtitle">
             {isLogin ? "Sign in to find your perfect PG" : "Join us to explore amazing PGs"}
@@ -139,7 +138,6 @@ export default function Login() {
 
         {errors.login && (
           <div className="error-message">
-            <span className="error-icon">⚠️</span>
             {errors.login}
           </div>
         )}
@@ -154,7 +152,6 @@ export default function Login() {
         {isLogin ? (
           <div className="form-container">
             <div className="input-group">
-              <span className="input-icon">📧</span>
               <input
                 type="email"
                 placeholder=" "
@@ -171,7 +168,6 @@ export default function Login() {
             </div>
 
             <div className="input-group">
-              <span className="input-icon">🔒</span>
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder=" "
@@ -220,7 +216,6 @@ export default function Login() {
         ) : (
           <div className="form-container">
             <div className="input-group">
-              <span className="input-icon">👤</span>
               <input
                 type="text"
                 placeholder=" "
@@ -237,7 +232,6 @@ export default function Login() {
             </div>
 
             <div className="input-group">
-              <span className="input-icon">📧</span>
               <input
                 type="email"
                 placeholder=" "
@@ -254,7 +248,6 @@ export default function Login() {
             </div>
 
             <div className="input-group">
-              <span className="input-icon">🔒</span>
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder=" "

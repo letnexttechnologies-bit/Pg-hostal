@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Heart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, ChevronLeft, ChevronRight, ArrowLeft, HeartOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 // PG Card Component with Slideshow for Wishlist
@@ -204,6 +204,24 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
           e.stopPropagation();
           onRemove(pg.id);
         }}
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(8px)",
+          border: "none",
+          borderRadius: "50%",
+          width: "40px",
+          height: "40px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "all 0.3s ease",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+          zIndex: 3,
+        }}
       >
         <Heart fill="#ff4757" color="#ff4757" size={20} />
       </button>
@@ -219,7 +237,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
             color: "#2c2c2c",
           }}
         >
-          🏠 {pg.name}
+          {pg.name}
         </h3>
 
         <p
@@ -229,7 +247,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
             color: "#666",
           }}
         >
-          📍 {pg.location}
+          {pg.location}
         </p>
 
         <p
@@ -240,7 +258,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
             color: "#d4af37",
           }}
         >
-          ₹{pg.price.toLocaleString()}/month
+          Rs {pg.price.toLocaleString()}/month
         </p>
 
         <div
@@ -261,7 +279,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
               fontWeight: "500",
             }}
           >
-            👤 {pg.gender}
+            {pg.gender}
           </span>
           {pg.distance && (
             <span
@@ -274,7 +292,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
                 fontWeight: "600",
               }}
             >
-              📍 {pg.distance} km away
+              {pg.distance} km away
             </span>
           )}
         </div>
@@ -309,6 +327,12 @@ export default function Wishlist() {
         fontFamily: '"Poppins", sans-serif',
       }}
     >
+      {/* Back Button */}
+      <button className="back-button" onClick={() => navigate(-1)}>
+        <ArrowLeft size={20} />
+        <span>Back</span>
+      </button>
+
       <h2
         style={{
           textAlign: "center",
@@ -319,7 +343,7 @@ export default function Wishlist() {
           letterSpacing: "1px",
         }}
       >
-        ❤️ Your Wishlist
+        Your Wishlist
       </h2>
 
       {wishlistItems.length === 0 ? (
@@ -331,7 +355,15 @@ export default function Wishlist() {
             fontSize: "18px",
           }}
         >
-          <div style={{ fontSize: "64px", marginBottom: "20px" }}>💔</div>
+          <div style={{ 
+            fontSize: "64px", 
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          }}>
+            <HeartOff size={64} strokeWidth={1.5} color="#999" />
+          </div>
           <p style={{ marginBottom: "10px", fontWeight: "600" }}>
             Your wishlist is empty
           </p>
