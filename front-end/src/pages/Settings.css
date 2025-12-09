@@ -14,16 +14,18 @@
 }
 
 .settings-header h1 {
-  font-size: 36px;
+  font-size: clamp(24px, 5vw, 36px);
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 8px 0;
+  line-height: 1.2;
 }
 
 .settings-subtitle {
-  font-size: 16px;
+  font-size: clamp(14px, 3vw, 16px);
   color: #6b7280;
   margin: 0;
+  line-height: 1.5;
 }
 
 /* Save Message */
@@ -38,6 +40,7 @@
   margin-bottom: 24px;
   animation: slideInDown 0.3s ease;
   box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  font-size: clamp(14px, 3vw, 16px);
 }
 
 @keyframes slideInDown {
@@ -74,19 +77,23 @@
   color: #d4af37;
   flex-shrink: 0;
   margin-top: 2px;
+  width: 24px;
+  height: 24px;
 }
 
 .section-header h2 {
-  font-size: 24px;
+  font-size: clamp(20px, 4vw, 24px);
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 4px 0;
+  line-height: 1.3;
 }
 
 .section-header p {
-  font-size: 14px;
+  font-size: clamp(13px, 2.5vw, 14px);
   color: #6b7280;
   margin: 0;
+  line-height: 1.5;
 }
 
 /* Settings List */
@@ -105,6 +112,7 @@
   border-radius: 12px;
   transition: all 0.3s;
   border: 1px solid transparent;
+  min-height: 80px;
 }
 
 .setting-item:hover {
@@ -126,12 +134,15 @@
   align-items: flex-start;
   gap: 16px;
   flex: 1;
+  min-width: 0;
 }
 
 .setting-info svg {
   color: #6b7280;
   flex-shrink: 0;
   margin-top: 2px;
+  width: 20px;
+  height: 20px;
 }
 
 .setting-item.danger .setting-info svg {
@@ -139,16 +150,20 @@
 }
 
 .setting-info h3 {
-  font-size: 16px;
+  font-size: clamp(15px, 3vw, 16px);
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 4px 0;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .setting-info p {
-  font-size: 14px;
+  font-size: clamp(13px, 2.5vw, 14px);
   color: #6b7280;
   margin: 0;
+  line-height: 1.5;
+  word-break: break-word;
 }
 
 /* Toggle Switch */
@@ -158,6 +173,8 @@
   width: 52px;
   height: 28px;
   flex-shrink: 0;
+  touch-action: manipulation;
+  align-self: center;
 }
 
 .toggle-switch input {
@@ -204,13 +221,14 @@ input:checked + .toggle-slider:before {
   padding: 10px 16px;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: clamp(14px, 3vw, 15px);
   font-weight: 500;
   color: #1f2937;
   background: white;
   cursor: pointer;
   transition: all 0.3s;
   min-width: 150px;
+  touch-action: manipulation;
 }
 
 .setting-select:focus {
@@ -223,14 +241,19 @@ input:checked + .toggle-slider:before {
 .action-btn {
   padding: 10px 24px;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: clamp(14px, 3vw, 15px);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   border: none;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  white-space: nowrap;
+  touch-action: manipulation;
+  min-height: 44px;
+  width: auto;
 }
 
 .action-btn.secondary {
@@ -242,6 +265,10 @@ input:checked + .toggle-slider:before {
 .action-btn.secondary:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.action-btn.secondary:active {
+  transform: translateY(0);
 }
 
 .action-btn.danger {
@@ -256,9 +283,15 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
+.action-btn.danger:active {
+  transform: translateY(0);
+}
+
 /* Delete Confirmation Popup */
 .delete-popup {
   max-width: 500px;
+  width: calc(100% - 32px);
+  margin: 16px;
 }
 
 .warning-box {
@@ -272,33 +305,43 @@ input:checked + .toggle-slider:before {
 .warning-box svg {
   color: #dc2626;
   margin-bottom: 16px;
+  width: 48px;
+  height: 48px;
 }
 
 .warning-box h3 {
-  font-size: 20px;
+  font-size: clamp(18px, 4vw, 20px);
   font-weight: 600;
   color: #991b1b;
   margin: 0 0 12px 0;
+  line-height: 1.3;
 }
 
 .warning-box p {
-  font-size: 15px;
+  font-size: clamp(14px, 3vw, 15px);
   color: #6b7280;
   margin: 0;
   line-height: 1.6;
+}
+
+.popup-actions {
+  display: flex;
+  gap: 12px;
 }
 
 .popup-btn-danger {
   flex: 1;
   padding: 14px 20px;
   border-radius: 10px;
-  font-size: 16px;
+  font-size: clamp(15px, 3vw, 16px);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   border: none;
   background: #dc2626;
   color: white;
+  min-height: 48px;
+  touch-action: manipulation;
 }
 
 .popup-btn-danger:hover {
@@ -307,17 +350,23 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
+.popup-btn-danger:active {
+  transform: translateY(0);
+}
+
 .popup-btn-secondary {
   flex: 1;
   padding: 14px 20px;
   border-radius: 10px;
-  font-size: 16px;
+  font-size: clamp(15px, 3vw, 16px);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   background: white;
   color: #1f2937;
   border: 2px solid #e5e7eb;
+  min-height: 48px;
+  touch-action: manipulation;
 }
 
 .popup-btn-secondary:hover {
@@ -325,72 +374,251 @@ input:checked + .toggle-slider:before {
   color: #d4af37;
 }
 
+.popup-btn-secondary:active {
+  background: #f9fafb;
+}
+
 /* Loading State */
 .loading {
   text-align: center;
   padding: 60px 20px;
-  font-size: 18px;
+  font-size: clamp(16px, 3vw, 18px);
   color: #6b7280;
 }
 
-/* Responsive Design */
+/* Tablet Breakpoint */
 @media (max-width: 768px) {
   .settings-container {
     padding: 24px 16px;
+    min-height: calc(100vh - 60px);
   }
 
-  .settings-header h1 {
-    font-size: 28px;
+  .settings-header {
+    margin-bottom: 32px;
   }
 
   .settings-section {
     padding: 24px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
   }
 
   .section-header {
-    flex-direction: column;
     gap: 12px;
+    padding-bottom: 16px;
+  }
+
+  .section-header svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .settings-list {
+    gap: 16px;
   }
 
   .setting-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+    padding: 16px;
+    min-height: auto;
   }
 
   .setting-info {
     width: 100%;
+    gap: 12px;
   }
 
   .toggle-switch,
-  .setting-select,
-  .action-btn {
+  .setting-select {
     width: 100%;
   }
 
-  .popup-actions {
-    flex-direction: column;
+  .toggle-switch {
+    max-width: 52px;
+    align-self: flex-start;
+  }
+
+  .action-btn {
+    width: auto;
+    align-self: flex-start;
+  }
+
+  .setting-select {
+    min-width: auto;
+  }
+
+  .save-message {
+    padding: 12px 16px;
+    gap: 10px;
+  }
+
+  .save-message svg {
+    width: 20px;
+    height: 20px;
   }
 }
 
+/* Mobile Breakpoint */
 @media (max-width: 480px) {
-  .settings-header h1 {
-    font-size: 24px;
+  .settings-container {
+    padding: 20px 12px;
+  }
+
+  .settings-header {
+    margin-bottom: 24px;
   }
 
   .settings-section {
     padding: 20px 16px;
+    border-radius: 10px;
+    margin-bottom: 16px;
   }
 
-  .section-header h2 {
-    font-size: 20px;
+  .section-header {
+    gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
   }
 
-  .setting-info h3 {
-    font-size: 15px;
+  .section-header svg {
+    width: 20px;
+    height: 20px;
   }
 
-  .setting-info p {
-    font-size: 13px;
+  .settings-list {
+    gap: 12px;
+  }
+
+  .setting-item {
+    padding: 14px;
+    gap: 14px;
+    border-radius: 10px;
+  }
+
+  .setting-info {
+    gap: 10px;
+  }
+
+  .setting-info svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-switch {
+    align-self: flex-start;
+  }
+
+  .toggle-slider:before {
+    height: 18px;
+    width: 18px;
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(22px);
+  }
+
+  .action-btn {
+    padding: 12px 20px;
+    gap: 6px;
+  }
+
+  .save-message {
+    padding: 10px 14px;
+    gap: 8px;
+    border-radius: 10px;
+  }
+
+  .warning-box {
+    padding: 24px 20px;
+  }
+
+  .warning-box svg {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+  }
+
+  .popup-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .popup-btn-danger,
+  .popup-btn-secondary {
+    width: 100%;
+  }
+
+  .delete-popup {
+    margin: 12px;
+  }
+}
+
+/* Small Mobile Breakpoint */
+@media (max-width: 360px) {
+  .settings-container {
+    padding: 16px 10px;
+  }
+
+  .settings-section {
+    padding: 16px 12px;
+  }
+
+  .setting-item {
+    padding: 12px;
+  }
+
+  .action-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .toggle-slider,
+  .action-btn,
+  .setting-select,
+  .popup-btn-danger,
+  .popup-btn-secondary {
+    cursor: default;
+  }
+
+  .setting-item:hover {
+    background: #f9fafb;
+    border-color: transparent;
+  }
+
+  .setting-item.danger:hover {
+    background: #f9fafb;
+    border-color: rgba(220, 38, 38, 0.2);
+  }
+
+  .action-btn:hover,
+  .popup-btn-danger:hover,
+  .popup-btn-secondary:hover {
+    transform: none;
+  }
+
+  .toggle-switch,
+  .action-btn,
+  .setting-select {
+    min-height: 44px;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .settings-container {
+    padding: 20px 16px;
+  }
+
+  .settings-header {
+    margin-bottom: 24px;
+  }
+
+  .settings-section {
+    margin-bottom: 16px;
   }
 }

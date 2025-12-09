@@ -155,18 +155,9 @@ export default function Home({ searchQuery: propSearchQuery }) {
   const [userLocation, setUserLocation] = useState([12.9716, 80.2209]); 
   const [pgsWithDistance, setPGsWithDistance] = useState([]);
   const [showMap, setShowMap] = useState(false);
-  const [maxPrice, setMaxPrice] = useState(25000);
   const [wishlist, setWishlist] = useState([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    stayType: [],
-    sharingType: [],
-    gender: [],
-    amenities: [],
-    locality: ""
-  });
 
   useEffect(() => {
     if (propSearchQuery !== undefined) {
@@ -249,49 +240,8 @@ export default function Home({ searchQuery: propSearchQuery }) {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
   };
 
-  const handlePriceChange = (e) => {
-    setMaxPrice(Number(e.target.value));
-  };
-
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-  };
-
-  const handleFilterChange = (category, value) => {
-    setFilters(prev => {
-      const currentValues = prev[category];
-      
-      if (Array.isArray(currentValues)) {
-        if (currentValues.includes(value)) {
-          return {
-            ...prev,
-            [category]: currentValues.filter(v => v !== value)
-          };
-        } else {
-          return {
-            ...prev,
-            [category]: [...currentValues, value]
-          };
-        }
-      } else {
-        return {
-          ...prev,
-          [category]: value
-        };
-      }
-    });
-  };
-
-  const clearAllFilters = () => {
-    setFilters({
-      stayType: [],
-      sharingType: [],
-      gender: [],
-      amenities: [],
-      locality: ""
-    });
-    setMaxPrice(25000);
-    setSearchQuery("");
   };
 
   const toggleWishlistAfterLogin = (pg) => {
@@ -341,30 +291,11 @@ export default function Home({ searchQuery: propSearchQuery }) {
   };
 
   const filteredPGs = pgsWithDistance.filter(pg => {
-    const matchesPrice = pg.price <= maxPrice;
     const matchesSearch = searchQuery.trim() === "" || 
       pg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pg.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesGender = filters.gender.length === 0 || 
-      filters.gender.some(g => pg.gender.toLowerCase() === g.toLowerCase());
-    
-    const matchesStayType = filters.stayType.length === 0 || 
-      filters.stayType.some(st => pg.stayType?.toLowerCase() === st.toLowerCase());
-    
-    const matchesSharingType = filters.sharingType.length === 0 || 
-      filters.sharingType.some(st => pg.sharingType?.toLowerCase().includes(st.toLowerCase()));
-    
-    const matchesAmenities = filters.amenities.length === 0 || 
-      filters.amenities.every(amenity => 
-        pg.amenities?.some(pgAmenity => pgAmenity.toLowerCase() === amenity.toLowerCase())
-      );
-    
-    const matchesLocality = filters.locality.trim() === "" ||
-      pg.location.toLowerCase().includes(filters.locality.toLowerCase());
-    
-    return matchesPrice && matchesSearch && matchesGender && matchesStayType && 
-           matchesSharingType && matchesAmenities && matchesLocality;
+    return matchesSearch;
   });
 
   return (
@@ -393,166 +324,7 @@ export default function Home({ searchQuery: propSearchQuery }) {
         </svg>
       </div>
 
-      <button
-        className={`mobile-filter-toggle ${showFilters ? 'active' : ''}`}
-        onClick={() => setShowFilters(!showFilters)}
-        aria-label="Toggle filters"
-      >
-        <div className="hamburger-icon">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </button>
-
-      <div 
-        className={`filter-overlay ${showFilters ? 'show' : ''}`}
-        onClick={() => setShowFilters(false)}
-      ></div>
-
       <div className="home-layout">
-        <div className={`sidebar ${showFilters ? 'show' : ''}`}>
-          <h3>Filters</h3>
-
-          <div className="filter-group">
-            <p>Maximum Price</p>
-            <div className="price-range-container">
-              <input
-                type="range"
-                min="3000"
-                max="50000"
-                step="500"
-                value={maxPrice}
-                onChange={handlePriceChange}
-              />
-              <span className="range-value">₹{maxPrice.toLocaleString()}</span>
-            </div>
-          </div>
-
-          <div className="filter-group">
-            <p>Stay Type</p>
-            <label>
-              <input 
-                type="checkbox" 
-                checked={filters.stayType.includes('Co-living')}
-                onChange={() => handleFilterChange('stayType', 'Co-living')}
-              /> Co-living
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.stayType.includes('Student Living')}
-                onChange={() => handleFilterChange('stayType', 'Student Living')}
-              /> Student Living
-            </label>
-          </div>
-
-          <div className="filter-group">
-            <p>Sharing Type</p>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.sharingType.includes('Private')}
-                onChange={() => handleFilterChange('sharingType', 'Private')}
-              /> Private
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.sharingType.includes('2 Sharing')}
-                onChange={() => handleFilterChange('sharingType', '2 Sharing')}
-              /> 2 Sharing
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.sharingType.includes('3 Sharing')}
-                onChange={() => handleFilterChange('sharingType', '3 Sharing')}
-              /> 3 Sharing
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.sharingType.includes('4 Sharing')}
-                onChange={() => handleFilterChange('sharingType', '4 Sharing')}
-              /> 4 Sharing
-            </label>
-          </div>
-
-          <div className="filter-group">
-            <p>Gender</p>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.gender.includes('Male')}
-                onChange={() => handleFilterChange('gender', 'Male')}
-              /> Male
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.gender.includes('Female')}
-                onChange={() => handleFilterChange('gender', 'Female')}
-              /> Female
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.gender.includes('Unisex')}
-                onChange={() => handleFilterChange('gender', 'Unisex')}
-              /> Unisex
-            </label>
-          </div>
-
-          <div className="filter-group">
-            <p>Amenities</p>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.amenities.includes('AC')}
-                onChange={() => handleFilterChange('amenities', 'AC')}
-              /> AC
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.amenities.includes('Gym')}
-                onChange={() => handleFilterChange('amenities', 'Gym')}
-              /> Gym
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.amenities.includes('Food')}
-                onChange={() => handleFilterChange('amenities', 'Food')}
-              /> Food
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.amenities.includes('Fridge')}
-                onChange={() => handleFilterChange('amenities', 'Fridge')}
-              /> Fridge
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.amenities.includes('Parking')}
-                onChange={() => handleFilterChange('amenities', 'Parking')}
-              /> Parking
-            </label>
-            <label>
-              <input 
-                type="checkbox"
-                checked={filters.amenities.includes('Power Backup')}
-                onChange={() => handleFilterChange('amenities', 'Power Backup')}
-              /> Power Backup
-            </label>
-          </div>
-
-          <button className="clear-filters-btn" onClick={clearAllFilters}>Clear All Filters</button>
-        </div>
-
         <div className="main-content">
           {showMap && (
             <div className="map-box">
@@ -605,9 +377,9 @@ export default function Home({ searchQuery: propSearchQuery }) {
                 fontSize: '18px', 
                 padding: '40px' 
               }}>
-                {searchQuery.trim() !== "" || filters.gender.length > 0 || filters.amenities.length > 0
-                  ? `No PGs found matching your filters. Try adjusting your search criteria.`
-                  : "No PGs found within your budget. Try adjusting the price filter."}
+                {searchQuery.trim() !== ""
+                  ? `No PGs found matching your search.`
+                  : "No PGs found."}
               </p>
             )}
           </div>
