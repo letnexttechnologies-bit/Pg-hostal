@@ -135,6 +135,296 @@
   color: #d4af37;
 }
 
+/* Modal Styles - Add these to your Footer.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-card {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #d4af37;
+  transform: rotate(90deg);
+}
+
+.modal-close svg {
+  color: #d4af37;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 24px 0;
+  padding-right: 40px;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.modal-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #d4af37 0%, #f2d06b 100%);
+  border-radius: 2px;
+}
+
+.modal-content {
+  color: #6b7280;
+  line-height: 1.8;
+  font-size: 15px;
+  white-space: pre-line;
+  font-weight: 500;
+}
+
+/* Modal Responsive Styles */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 16px;
+  }
+
+  .modal-card {
+    padding: 32px 24px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+  }
+
+  .modal-content {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-card {
+    padding: 24px 20px;
+    border-radius: 12px;
+  }
+
+  .modal-close {
+    width: 36px;
+    height: 36px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    margin-bottom: 16px;
+    padding-right: 36px;
+  }
+
+  .modal-title::after {
+    width: 50px;
+    height: 3px;
+  }
+
+  .modal-content {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+}
+
+/* Sitemap Modal Styles - Add to Footer.css */
+
+.sitemap-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;
+}
+
+.sitemap-section {
+  margin-bottom: 8px;
+}
+
+.sitemap-category {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  position: relative;
+}
+
+.sitemap-category::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #d4af37 0%, #f2d06b 100%);
+  border-radius: 2px;
+}
+
+.sitemap-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sitemap-links li {
+  margin: 0;
+}
+
+.sitemap-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 6px 0;
+}
+
+.sitemap-link:hover {
+  color: #d4af37;
+  transform: translateX(5px);
+}
+
+.sitemap-link svg {
+  flex-shrink: 0;
+  color: #d4af37;
+  transition: transform 0.3s ease;
+}
+
+.sitemap-link:hover svg {
+  transform: translateX(3px);
+}
+
+.sitemap-footer {
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(212, 175, 55, 0.2);
+  text-align: center;
+}
+
+.sitemap-footer p {
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Sitemap Responsive */
+@media (max-width: 768px) {
+  .sitemap-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+
+  .sitemap-category {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .sitemap-link {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sitemap-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .sitemap-category {
+    font-size: 15px;
+  }
+
+  .sitemap-links {
+    gap: 8px;
+  }
+
+  .sitemap-link {
+    font-size: 13px;
+    padding: 4px 0;
+  }
+}
+
 /* Bottom Bar */
 .footer-bottom {
   border-top: 2px solid rgba(212, 175, 55, 0.2);
