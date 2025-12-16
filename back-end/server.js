@@ -10,7 +10,10 @@ app.use(cors({
   origin: 'http://localhost:5173', // Your frontend URL
   credentials: true
 }));
-app.use(express.json());
+
+// Increase payload limit for image uploads (ADD THESE LINES)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Import routes
 const authRoutes = require("./routes/authRoutes");

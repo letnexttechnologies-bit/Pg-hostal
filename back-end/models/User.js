@@ -57,6 +57,19 @@ const userSchema = new mongoose.Schema(
         ref: "PG",
       },
     ],
+    // Settings field for Settings page (NEW - ADD THIS)
+    settings: {
+      emailNotifications: { type: Boolean, default: true },
+      pushNotifications: { type: Boolean, default: true },
+      smsNotifications: { type: Boolean, default: false },
+      marketingEmails: { type: Boolean, default: false },
+      profileVisibility: { type: String, default: 'public' },
+      showEmail: { type: Boolean, default: false },
+      showPhone: { type: Boolean, default: false },
+      darkMode: { type: Boolean, default: false },
+      language: { type: String, default: 'en' },
+      twoFactorAuth: { type: Boolean, default: false }
+    },
   },
   {
     timestamps: true,

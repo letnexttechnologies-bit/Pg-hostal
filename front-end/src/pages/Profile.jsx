@@ -44,19 +44,40 @@ export default function Profile() {
       if (currentUser) {
         try {
           // Try to fetch full user details from API
-          const response = await userAPI.getUserById(currentUser.id || currentUser._id);
-          setUser(response.user);
-          setProfilePhoto(response.user.profilePhoto || null);
+          const userId = currentUser.id || currentUser._id;
+          const response = await userAPI.getUserById(userId);
+          const fullUser = response.user;
+          
+          setUser(fullUser);
+          setProfilePhoto(fullUser.profilePhoto || null);
           setFormData({
-            name: response.user.name || "",
-            email: response.user.email || "",
-            phone: response.user.phone || "",
-            location: response.user.location || "",
-            dateOfBirth: response.user.dateOfBirth || "",
-            gender: response.user.gender || "",
-            occupation: response.user.occupation || "",
-            bio: response.user.bio || ""
+            name: fullUser.name || "",
+            email: fullUser.email || "",
+            phone: fullUser.phone || "",
+            location: fullUser.location || "",
+            dateOfBirth: fullUser.dateOfBirth || "",
+            gender: fullUser.gender || "",
+            occupation: fullUser.occupation || "",
+            bio: fullUser.bio || ""
           });
+
+          // Update sessionStorage/localStorage with full user data including profile photo
+          const updatedUserData = {
+            id: fullUser._id || fullUser.id,
+            name: fullUser.name,
+            email: fullUser.email,
+            role: fullUser.role,
+            profilePhoto: fullUser.profilePhoto
+          };
+          
+          // Update both storages
+          if (sessionStorage.getItem("user")) {
+            sessionStorage.setItem("user", JSON.stringify(updatedUserData));
+          }
+          if (localStorage.getItem("user")) {
+            localStorage.setItem("user", JSON.stringify(updatedUserData));
+          }
+
         } catch (apiError) {
           // If API call fails, fall back to using data from sessionStorage
           console.warn("API call failed, using cached user data:", apiError);
@@ -82,7 +103,7 @@ export default function Profile() {
       setLoading(false);
     }
   };
-
+  
   const loadWishlistCount = async () => {
     try {
       const response = await wishlistAPI.getWishlist();
@@ -146,8 +167,22 @@ export default function Profile() {
       const updatedUser = { ...user, ...updatedData };
       setUser(updatedUser);
       
-      // Update sessionStorage
-      sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      // Update sessionStorage AND localStorage with profile photo
+      const userDataForStorage = {
+        id: updatedUser._id || updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        profilePhoto: updatedUser.profilePhoto // Include profile photo
+      };
+
+      // Update both storages
+      if (sessionStorage.getItem("user")) {
+        sessionStorage.setItem("user", JSON.stringify(userDataForStorage));
+      }
+      if (localStorage.getItem("user")) {
+        localStorage.setItem("user", JSON.stringify(userDataForStorage));
+      }
       
       setIsEditing(false);
       alert("Profile updated successfully!");

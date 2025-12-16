@@ -24,6 +24,7 @@ export default function Settings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -40,31 +41,64 @@ export default function Settings() {
 
   useEffect(() => {
     loadUserAndSettings();
-  }, [navigate]);
+  }, []);
 
   const loadUserAndSettings = async () => {
-    const isLoggedIn = authAPI.isLoggedIn();
-    
-    if (!isLoggedIn) {
-      navigate("/login");
-      return;
-    }
-
     try {
       setLoading(true);
-      const currentUser = authAPI.getCurrentUser();
+      setError(null);
       
-      if (currentUser) {
-        const response = await userAPI.getUserById(currentUser.id);
+      // Check if user is logged in
+      const isLoggedIn = authAPI.isLoggedIn();
+      if (!isLoggedIn) {
+        navigate("/login");
+        return;
+      }
+
+      // Get current user from auth
+      const currentUser = authAPI.getCurrentUser();
+      console.log("Current user from auth:", currentUser);
+      
+      if (!currentUser) {
+        console.error("No current user found");
+        navigate("/login");
+        return;
+      }
+
+      // Check if user has an id property
+      const userId = currentUser.id || currentUser._id || currentUser.userId;
+      
+      if (!userId) {
+        console.error("User object has no ID:", currentUser);
+        setError("Invalid user session. Please log in again.");
+        setTimeout(() => navigate("/login"), 2000);
+        return;
+      }
+
+      console.log("Fetching user with ID:", userId);
+      
+      // Fetch full user data
+      const response = await userAPI.getUserById(userId);
+      console.log("User data response:", response);
+      
+      if (response && response.user) {
         setUser(response.user);
         
         // Load settings from user data or use defaults
         if (response.user.settings) {
           setSettings(response.user.settings);
         }
+      } else {
+        throw new Error("Invalid response format");
       }
     } catch (error) {
       console.error("Error loading user data:", error);
+      setError(error.message || "Failed to load user data");
+      
+      // If it's an auth error, redirect to login
+      if (error.message?.includes("401") || error.message?.includes("token")) {
+        setTimeout(() => navigate("/login"), 2000);
+      }
     } finally {
       setLoading(false);
     }
@@ -90,11 +124,16 @@ export default function Settings() {
 
   const saveSettings = async (newSettings) => {
     try {
-      await userAPI.updateUser(user._id || user.id, { settings: newSettings });
+      const userId = user._id || user.id;
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+      
+      await userAPI.updateUser(userId, { settings: newSettings });
       showSaveMessage();
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Failed to save settings");
+      alert("Failed to save settings: " + (error.message || "Unknown error"));
     }
   };
 
@@ -108,7 +147,12 @@ export default function Settings() {
       const wishlistResponse = await wishlistAPI.getWishlist();
       
       const userData = {
-        profile: user,
+        profile: {
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          createdAt: user.createdAt
+        },
         settings: settings,
         wishlist: wishlistResponse.wishlist || []
       };
@@ -121,16 +165,25 @@ export default function Settings() {
       link.download = `pgfinder-data-${Date.now()}.json`;
       link.click();
       URL.revokeObjectURL(url);
+      
+      alert("Data exported successfully!");
     } catch (error) {
       console.error("Error exporting data:", error);
-      alert("Failed to export data");
+      alert("Failed to export data: " + (error.message || "Unknown error"));
     }
   };
 
   const handleDeleteAccount = async () => {
-    if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
+    setShowDeleteConfirm(false);
+    
+    if (window.confirm("Are you absolutely sure? This action cannot be undone. Type DELETE to confirm.")) {
       try {
-        await userAPI.deleteUser(user._id || user.id);
+        const userId = user._id || user.id;
+        if (!userId) {
+          throw new Error("User ID not found");
+        }
+        
+        await userAPI.deleteUser(userId);
         
         // Clear all session data
         authAPI.logout();
@@ -139,13 +192,13 @@ export default function Settings() {
         navigate("/login");
       } catch (error) {
         console.error("Error deleting account:", error);
-        alert("Failed to delete account");
+        alert("Failed to delete account: " + (error.message || "Unknown error"));
       }
     }
   };
 
   const handleChangePassword = () => {
-    alert("Password change functionality coming soon!");
+    navigate("/change-password");
   };
 
   if (loading) {
@@ -155,7 +208,9 @@ export default function Settings() {
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          height: '60vh' 
+          height: '60vh',
+          flexDirection: 'column',
+          gap: '20px'
         }}>
           <div style={{
             width: '50px',
@@ -165,6 +220,39 @@ export default function Settings() {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
+          <p>Loading your settings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="settings-container">
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '60vh',
+          gap: '20px'
+        }}>
+          <AlertCircle size={48} color="#e74c3c" />
+          <h2>Error Loading Settings</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => navigate("/login")}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#d4af37',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Go to Login
+          </button>
         </div>
       </div>
     );
@@ -173,7 +261,31 @@ export default function Settings() {
   if (!user) {
     return (
       <div className="settings-container">
-        <div className="loading">User not found</div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '60vh',
+          gap: '20px'
+        }}>
+          <AlertCircle size={48} color="#e74c3c" />
+          <h2>User Not Found</h2>
+          <p>Please log in to access settings</p>
+          <button 
+            onClick={() => navigate("/login")}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#d4af37',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Go to Login
+          </button>
+        </div>
       </div>
     );
   }
@@ -377,7 +489,7 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Appearance Section */}
+        {/* Appearance Section
         <div className="settings-section">
           <div className="section-header">
             <Sun size={24} />
@@ -426,7 +538,7 @@ export default function Settings() {
               </select>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Data & Account Section */}
         <div className="settings-section">

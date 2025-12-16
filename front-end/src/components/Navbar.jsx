@@ -61,13 +61,20 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
       checkAuth();
     };
 
+    // Add custom event listener for profile updates
+    const handleProfileUpdate = () => {
+      checkAuth();
+    };
+
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("profileUpdated", handleProfileUpdate);
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("profileUpdated", handleProfileUpdate);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);

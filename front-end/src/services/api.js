@@ -47,7 +47,7 @@ const fetchAPI = async (endpoint, options = {}) => {
     
     // Check if response is ok
     if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
     }
 
     return data;
@@ -77,6 +77,14 @@ export const authAPI = {
     return fetchAPI("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
+    });
+  },
+
+  // Change password
+  changePassword: async (passwordData) => {
+    return fetchAPI("/auth/change-password", {
+      method: "PUT",
+      body: JSON.stringify(passwordData),
     });
   },
 

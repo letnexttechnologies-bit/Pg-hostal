@@ -9,6 +9,7 @@ import Wishlist from './pages/Wishlist';
 import Profile from './pages/Profile';
 import PGDetails from './pages/PGDetails';
 import Settings from './pages/Settings';
+import ChangePassword from './pages/ChangePassword';
 import AdminPanel from './pages/AdminPanel';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/pg/:id" element={<PGDetails />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/admin" element={<AdminPanel />} />
       </Routes>
       <Footer />
