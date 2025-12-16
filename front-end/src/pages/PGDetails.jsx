@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Users, Home as HomeIcon, Wifi, Car, Utensils, Dumbbe
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import pgList from "../data/pgList";
+import { pgAPI, wishlistAPI, authAPI } from "../services/api";
 import "./PGDetails.css";
 
 // Fix for default marker icon in react-leaflet
@@ -15,7 +15,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Custom PG marker icon (gold)
 const pgIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
@@ -25,7 +24,6 @@ const pgIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Custom User Location marker icon (blue)
 const userIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
@@ -45,6 +43,7 @@ export default function PGDetails() {
   const [distance, setDistance] = useState(null);
   const [showContactPopup, setShowContactPopup] = useState(false);
   const [showVisitPopup, setShowVisitPopup] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [visitForm, setVisitForm] = useState({
     name: '',
     phone: '',
@@ -54,9 +53,8 @@ export default function PGDetails() {
     message: ''
   });
 
-  // Calculate distance between two coordinates
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth's radius in kilometers
+    const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
@@ -68,62 +66,67 @@ export default function PGDetails() {
   };
 
   useEffect(() => {
-    const foundPG = pgList.find(p => p.id === parseInt(id));
-    if (foundPG) {
-      setPG(foundPG);
-    } else {
+    loadPGDetails();
+    loadWishlist();
+    getUserLocation();
+  }, [id]);
+
+  const loadPGDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await pgAPI.getPGById(id);
+      setPG(response.pg);
+    } catch (error) {
+      console.error("Error loading PG details:", error);
+      alert("Failed to load PG details");
       navigate("/");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const saved = localStorage.getItem('pgWishlist');
-    if (saved) {
-      setWishlist(JSON.parse(saved));
+  const loadWishlist = async () => {
+    const isLoggedIn = authAPI.isLoggedIn();
+    
+    if (isLoggedIn) {
+      try {
+        const response = await wishlistAPI.getWishlist();
+        setWishlist(response.wishlist || []);
+      } catch (error) {
+        console.error("Error loading wishlist:", error);
+        setWishlist([]);
+      }
     }
+  };
 
-    // Get user's current location
+  const getUserLocation = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const userCoords = [pos.coords.latitude, pos.coords.longitude];
         setUserLocation(userCoords);
-        
-        // Calculate distance if PG has coordinates
-        if (foundPG && foundPG.latitude && foundPG.longitude) {
-          const dist = calculateDistance(
-            userCoords[0],
-            userCoords[1],
-            foundPG.latitude,
-            foundPG.longitude
-          );
-          setDistance(dist.toFixed(2));
-        }
       },
       (error) => {
         console.error("Location error:", error);
-        // Default to Chennai if location access denied
         const defaultCoords = [12.9716, 80.2209];
         setUserLocation(defaultCoords);
-        
-        if (foundPG && foundPG.latitude && foundPG.longitude) {
-          const dist = calculateDistance(
-            defaultCoords[0],
-            defaultCoords[1],
-            foundPG.latitude,
-            foundPG.longitude
-          );
-          setDistance(dist.toFixed(2));
-        }
       }
     );
-  }, [id, navigate]);
-
-  const checkUserLoggedIn = () => {
-    const loggedIn = localStorage.getItem('loggedIn');
-    const authToken = localStorage.getItem('authToken');
-    return !!(loggedIn === 'true' || authToken);
   };
 
-  const toggleWishlist = () => {
-    const isLoggedIn = checkUserLoggedIn();
+  useEffect(() => {
+    if (pg && userLocation) {
+      const dist = calculateDistance(
+        userLocation[0],
+        userLocation[1],
+        pg.latitude,
+        pg.longitude
+      );
+      setDistance(dist.toFixed(2));
+    }
+  }, [pg, userLocation]);
+
+  const toggleWishlist = async () => {
+    const isLoggedIn = authAPI.isLoggedIn();
     
     if (!isLoggedIn) {
       navigate('/login', { 
@@ -136,17 +139,20 @@ export default function PGDetails() {
       return;
     }
     
-    const isInWishlist = wishlist.some(item => item.id === pg.id);
-    let updated;
-    
-    if (isInWishlist) {
-      updated = wishlist.filter(item => item.id !== pg.id);
-    } else {
-      updated = [...wishlist, pg];
+    try {
+      const isInWishlistNow = wishlist.some(item => (item._id || item.id) === (pg._id || pg.id));
+      
+      if (isInWishlistNow) {
+        await wishlistAPI.removeFromWishlist(pg._id || pg.id);
+        setWishlist(wishlist.filter(item => (item._id || item.id) !== (pg._id || pg.id)));
+      } else {
+        await wishlistAPI.addToWishlist(pg._id || pg.id);
+        setWishlist([...wishlist, pg]);
+      }
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+      alert('Failed to update wishlist');
     }
-    
-    setWishlist(updated);
-    localStorage.setItem('pgWishlist', JSON.stringify(updated));
   };
 
   const handleVisitFormChange = (e) => {
@@ -156,23 +162,30 @@ export default function PGDetails() {
     });
   };
 
-  const handleScheduleVisit = (e) => {
+  const handleScheduleVisit = async (e) => {
     e.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log('Visit scheduled:', visitForm);
-    alert('Visit request submitted! The owner will contact you soon.');
-    setShowVisitPopup(false);
-    setVisitForm({
-      name: '',
-      phone: '',
-      email: '',
-      date: '',
-      time: '',
-      message: ''
-    });
+    
+    try {
+      // Here you would call your API to schedule the visit
+      // await visitAPI.scheduleVisit({ pgId: pg._id, ...visitForm });
+      
+      console.log('Visit scheduled:', visitForm);
+      alert('Visit request submitted! The owner will contact you soon.');
+      setShowVisitPopup(false);
+      setVisitForm({
+        name: '',
+        phone: '',
+        email: '',
+        date: '',
+        time: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error("Error scheduling visit:", error);
+      alert('Failed to schedule visit. Please try again.');
+    }
   };
 
-  // Navigation functions for image slideshow
   const nextImage = () => {
     if (images.length > 0) {
       setSelectedImage((prev) => (prev + 1) % images.length);
@@ -185,7 +198,6 @@ export default function PGDetails() {
     }
   };
 
-  // Keyboard navigation for images
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') {
@@ -199,8 +211,6 @@ export default function PGDetails() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const isInWishlist = pg && wishlist.some(item => item.id === pg.id);
-
   const getAmenityIcon = (amenity) => {
     const amenityLower = amenity.toLowerCase();
     if (amenityLower.includes('wifi') || amenityLower.includes('internet')) return <Wifi size={20} />;
@@ -212,7 +222,7 @@ export default function PGDetails() {
     return <HomeIcon size={20} />;
   };
 
-  if (!pg) {
+  if (loading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -232,7 +242,16 @@ export default function PGDetails() {
     );
   }
 
-  // Support both 'images' array and legacy 'image' + 'additionalImages'
+  if (!pg) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px' }}>
+        <p>PG not found</p>
+        <button onClick={() => navigate('/')}>Go Back Home</button>
+      </div>
+    );
+  }
+
+  const isInWishlist = wishlist.some(item => (item._id || item.id) === (pg._id || pg.id));
   const images = pg.images && pg.images.length > 0 
     ? pg.images 
     : [pg.image, ...(pg.additionalImages || [])].filter(Boolean);
@@ -255,7 +274,6 @@ export default function PGDetails() {
               }}
             />
             
-            {/* Navigation Arrows for Main Image */}
             {images.length > 1 && (
               <>
                 <button 
@@ -275,14 +293,12 @@ export default function PGDetails() {
               </>
             )}
 
-            {/* Image Counter Badge */}
             {images.length > 1 && (
               <div className="main-image-counter">
                 {selectedImage + 1} / {images.length}
               </div>
             )}
 
-            {/* Wishlist Button */}
             <button 
               className="wishlist-btn"
               onClick={toggleWishlist}
@@ -297,7 +313,6 @@ export default function PGDetails() {
             </button>
           </div>
           
-          {/* Thumbnail Gallery */}
           {images.length > 1 && (
             <div className="thumbnail-gallery">
               {images.map((img, index) => (
@@ -323,7 +338,6 @@ export default function PGDetails() {
             </div>
           )}
 
-          {/* Dynamic Map Under Image - Shows both PG and User Location */}
           {pg.latitude && pg.longitude && userLocation && (
             <div className="map-section-gallery">
               <h3>Location</h3>
@@ -338,7 +352,6 @@ export default function PGDetails() {
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   />
                   
-                  {/* PG Location Marker (Gold) */}
                   <Marker position={[pg.latitude, pg.longitude]} icon={pgIcon}>
                     <Popup>
                       <div style={{ textAlign: "center" }}>
@@ -347,23 +360,14 @@ export default function PGDetails() {
                         <span style={{ fontSize: "12px", color: "#666" }}>
                           {pg.location}
                         </span>
-                        <br />
-                        <span style={{ fontSize: "11px", color: "#999", fontStyle: "italic" }}>
-                          PG Location
-                        </span>
                       </div>
                     </Popup>
                   </Marker>
 
-                  {/* User Location Marker (Blue) */}
                   <Marker position={userLocation} icon={userIcon}>
                     <Popup>
                       <div style={{ textAlign: "center" }}>
                         <strong style={{ color: "#2196F3" }}>Your Location</strong>
-                        <br />
-                        <span style={{ fontSize: "12px", color: "#666" }}>
-                          You are here
-                        </span>
                       </div>
                     </Popup>
                   </Marker>
@@ -437,7 +441,7 @@ export default function PGDetails() {
 
           <div className="description-section">
             <h2>About this PG</h2>
-            <p>{pg.description || "A comfortable and well-maintained PG accommodation with all essential amenities. Perfect for students and working professionals looking for a safe and convenient living space."}</p>
+            <p>{pg.description || "A comfortable and well-maintained PG accommodation with all essential amenities."}</p>
           </div>
 
           {pg.amenities && pg.amenities.length > 0 && (

@@ -24,6 +24,33 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    // ADD THESE NEW FIELDS FOR PROFILE
+    phone: {
+      type: String,
+      trim: true,
+    },
+    location: {
+      type: String,
+      trim: true,
+    },
+    dateOfBirth: {
+      type: String,
+    },
+    gender: {
+      type: String,
+      // enum: ["Male", "Female", "Other", ""],
+    },
+    occupation: {
+      type: String,
+      trim: true,
+    },
+    bio: {
+      type: String,
+      trim: true,
+    },
+    profilePhoto: {
+      type: String, // Base64 encoded image string
+    },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

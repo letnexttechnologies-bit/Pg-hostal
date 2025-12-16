@@ -130,7 +130,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="footer-bottom">
-          <p>&copy; 2024 PGFinder. All rights reserved.</p>
+          <p>&copy; 2025 PGFinder. All rights reserved.</p>
           <div className="footer-bottom-links">
             <a onClick={() => openModal('privacy')}>Privacy</a>
             <span className="separator">•</span>

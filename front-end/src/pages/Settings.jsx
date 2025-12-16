@@ -15,6 +15,7 @@ import {
   AlertCircle,
   Check
 } from "lucide-react";
+import { userAPI, wishlistAPI, authAPI } from "../services/api";
 import "./Settings.css";
 
 export default function Settings() {
@@ -22,66 +23,79 @@ export default function Settings() {
   const [user, setUser] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   
   const [settings, setSettings] = useState({
-    // Notifications
     emailNotifications: true,
     pushNotifications: true,
     smsNotifications: false,
     marketingEmails: false,
-    
-    // Privacy
     profileVisibility: "public",
     showEmail: false,
     showPhone: false,
-    
-    // Appearance
     darkMode: false,
     language: "en",
-    
-    // Account
     twoFactorAuth: false
   });
 
   useEffect(() => {
-    // Check if user is logged in
-    const loggedIn = localStorage.getItem("loggedIn");
-    if (loggedIn !== "true") {
+    loadUserAndSettings();
+  }, [navigate]);
+
+  const loadUserAndSettings = async () => {
+    const isLoggedIn = authAPI.isLoggedIn();
+    
+    if (!isLoggedIn) {
       navigate("/login");
       return;
     }
 
-    // Load user data
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      setUser(JSON.parse(userData));
+    try {
+      setLoading(true);
+      const currentUser = authAPI.getCurrentUser();
+      
+      if (currentUser) {
+        const response = await userAPI.getUserById(currentUser.id);
+        setUser(response.user);
+        
+        // Load settings from user data or use defaults
+        if (response.user.settings) {
+          setSettings(response.user.settings);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Load settings from localStorage
-    const savedSettings = localStorage.getItem("userSettings");
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
-    }
-  }, [navigate]);
-
-  const handleToggle = (setting) => {
+  const handleToggle = async (setting) => {
     const newSettings = {
       ...settings,
       [setting]: !settings[setting]
     };
     setSettings(newSettings);
-    localStorage.setItem("userSettings", JSON.stringify(newSettings));
-    showSaveMessage();
+    await saveSettings(newSettings);
   };
 
-  const handleSelectChange = (setting, value) => {
+  const handleSelectChange = async (setting, value) => {
     const newSettings = {
       ...settings,
       [setting]: value
     };
     setSettings(newSettings);
-    localStorage.setItem("userSettings", JSON.stringify(newSettings));
-    showSaveMessage();
+    await saveSettings(newSettings);
+  };
+
+  const saveSettings = async (newSettings) => {
+    try {
+      await userAPI.updateUser(user._id || user.id, { settings: newSettings });
+      showSaveMessage();
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      alert("Failed to save settings");
+    }
   };
 
   const showSaveMessage = () => {
@@ -89,34 +103,44 @@ export default function Settings() {
     setTimeout(() => setSaveMessage(""), 3000);
   };
 
-  const handleExportData = () => {
-    const userData = {
-      profile: user,
-      settings: settings,
-      wishlist: JSON.parse(localStorage.getItem("pgWishlist") || "[]")
-    };
-    
-    const dataStr = JSON.stringify(userData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `pgfinder-data-${Date.now()}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleExportData = async () => {
+    try {
+      const wishlistResponse = await wishlistAPI.getWishlist();
+      
+      const userData = {
+        profile: user,
+        settings: settings,
+        wishlist: wishlistResponse.wishlist || []
+      };
+      
+      const dataStr = JSON.stringify(userData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `pgfinder-data-${Date.now()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      alert("Failed to export data");
+    }
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (window.confirm("Are you absolutely sure? This action cannot be undone.")) {
-      // Clear all user data
-      localStorage.removeItem("user");
-      localStorage.removeItem("loggedIn");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("pgWishlist");
-      localStorage.removeItem("userSettings");
-      
-      window.dispatchEvent(new Event('storage'));
-      navigate("/login");
+      try {
+        await userAPI.deleteUser(user._id || user.id);
+        
+        // Clear all session data
+        authAPI.logout();
+        
+        alert("Account deleted successfully");
+        navigate("/login");
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        alert("Failed to delete account");
+      }
     }
   };
 
@@ -124,10 +148,32 @@ export default function Settings() {
     alert("Password change functionality coming soon!");
   };
 
+  if (loading) {
+    return (
+      <div className="settings-container">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '60vh' 
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #d4af37',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="settings-container">
-        <div className="loading">Loading...</div>
+        <div className="loading">User not found</div>
       </div>
     );
   }

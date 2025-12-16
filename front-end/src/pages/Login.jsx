@@ -39,34 +39,47 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
-    if (!validateForm()) return;
 
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const response = await authAPI.login({ email, password });
-      
-      // Store token and user data
+const handleLogin = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const response = await authAPI.login({ email, password });
+    
+    console.log("Login response:", response); // Debug log
+    
+    // Store the token - check what your backend returns
+    if (response.token) {
       sessionStorage.setItem("token", response.token);
-      sessionStorage.setItem("user", JSON.stringify(response.user));
-      sessionStorage.setItem("loggedIn", "true");
-
-      // Show success message briefly
-      setErrors({ success: "Login successful! Redirecting..." });
-
-      // Redirect to home page
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
-
-    } catch (error) {
-      setErrors({ login: error.message || "Invalid email or password" });
-    } finally {
-      setIsLoading(false);
+      localStorage.setItem("authToken", response.token);
+      console.log("Token stored:", response.token); // Debug log
     }
-  };
+    
+    // Store user data
+    if (response.user) {
+      sessionStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("loggedIn", "true");
+      console.log("User stored:", response.user); // Debug log
+    }
+    
+    // Trigger storage event
+    window.dispatchEvent(new Event('storage'));
+    
+    // Navigate based on pending action or default to home
+    if (location.state?.from) {
+      navigate(location.state.from, { 
+        state: { pendingWishlistAction: location.state?.pendingWishlistAction } 
+      });
+    } else {
+      navigate('/');
+    }
+    
+  } catch (error) {
+    console.error("Login error:", error);
+    setError(error.message || "Login failed");
+  }
+};
 
   const handleRegister = async () => {
     if (!validateForm()) return;

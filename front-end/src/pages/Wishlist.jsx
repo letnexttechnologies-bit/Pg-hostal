@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { Heart, ChevronLeft, ChevronRight, ArrowLeft, HeartOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { wishlistAPI, authAPI } from "../services/api";
 
-// PG Card Component with Slideshow for Wishlist
 function WishlistPGCard({ pg, onRemove, onNavigate }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Support both 'images' array and legacy 'image' property
   const images = pg.images && pg.images.length > 0 
     ? pg.images 
     : (pg.image ? [pg.image] : ['https://via.placeholder.com/400x300?text=No+Image']);
@@ -42,7 +41,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
         position: "relative",
         cursor: "pointer",
       }}
-      onClick={() => onNavigate(pg.id)}
+      onClick={() => onNavigate(pg._id || pg.id)}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "translateY(-4px)";
         e.currentTarget.style.boxShadow = "0 12px 32px rgba(212, 175, 55, 0.2)";
@@ -52,7 +51,6 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
         e.currentTarget.style.boxShadow = "0 8px 24px rgba(212, 175, 55, 0.12)";
       }}
     >
-      {/* Image Container with Slideshow */}
       <div style={{ position: "relative", overflow: "hidden" }}>
         <img
           src={images[currentImageIndex]}
@@ -68,7 +66,6 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
           }}
         />
 
-        {/* Navigation Arrows - Only show if multiple images */}
         {images.length > 1 && (
           <>
             <button
@@ -138,7 +135,6 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
           </>
         )}
 
-        {/* Image Indicators */}
         {images.length > 1 && (
           <div
             style={{
@@ -176,7 +172,6 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
           </div>
         )}
 
-        {/* Image Counter Badge */}
         {images.length > 1 && (
           <div
             style={{
@@ -197,37 +192,35 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
           </div>
         )}
 
-       {/* Remove from Wishlist Button */}
-      <button
-        className="wishlist-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(pg.id);
-        }}
-        style={{
-          position: "absolute",
-          top: "12px",
-          right: "12px",
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(8px)",
-          border: "none",
-          borderRadius: "50%",
-          width: "40px",
-          height: "40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          transition: "all 0.3s ease",
-          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-          zIndex: 3,
-        }}
-      >
-        <Heart fill="#ff4757" color="#ff4757" size={20} />
-      </button>
+        <button
+          className="wishlist-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(pg._id || pg.id);
+          }}
+          style={{
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(8px)",
+            border: "none",
+            borderRadius: "50%",
+            width: "40px",
+            height: "40px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+            zIndex: 3,
+          }}
+        >
+          <Heart fill="#ff4757" color="#ff4757" size={20} />
+        </button>
       </div>
 
-      {/* Card Content */}
       <div style={{ padding: "18px" }}>
         <h3
           style={{
@@ -258,7 +251,7 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
             color: "#d4af37",
           }}
         >
-          Rs {pg.price.toLocaleString()}/month
+          ₹{pg.price.toLocaleString()}/month
         </p>
 
         <div
@@ -303,20 +296,71 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
 
 export default function Wishlist() {
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const saved = localStorage.getItem("pgWishlist");
-    if (saved) {
-      setWishlistItems(JSON.parse(saved));
-    }
+    loadWishlist();
   }, []);
 
-  const removeFromWishlist = (id) => {
-    const updated = wishlistItems.filter((item) => item.id !== id);
-    setWishlistItems(updated);
-    localStorage.setItem("pgWishlist", JSON.stringify(updated));
+  const loadWishlist = async () => {
+    const isLoggedIn = authAPI.isLoggedIn();
+    
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await wishlistAPI.getWishlist();
+      setWishlistItems(response.wishlist || []);
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+      setWishlistItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const removeFromWishlist = async (id) => {
+    try {
+      await wishlistAPI.removeFromWishlist(id);
+      setWishlistItems(wishlistItems.filter((item) => (item._id || item.id) !== id));
+    } catch (error) {
+      console.error("Error removing from wishlist:", error);
+      alert("Failed to remove from wishlist");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#ffffff",
+          padding: "40px 20px",
+          fontFamily: '"Poppins", sans-serif',
+        }}
+      >
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '60vh' 
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #d4af37',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -327,7 +371,6 @@ export default function Wishlist() {
         fontFamily: '"Poppins", sans-serif',
       }}
     >
-      {/* Back Button */}
       <button className="back-button" onClick={() => navigate(-1)}>
         <ArrowLeft size={20} />
         <span>Back</span>
@@ -381,7 +424,7 @@ export default function Wishlist() {
         >
           {wishlistItems.map((pg) => (
             <WishlistPGCard
-              key={pg.id}
+              key={pg._id || pg.id}
               pg={pg}
               onRemove={removeFromWishlist}
               onNavigate={(id) => navigate(`/pg/${id}`)}

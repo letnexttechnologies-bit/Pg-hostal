@@ -5,22 +5,31 @@ require("dotenv").config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Middleware - CORS should be configured ONCE at the top
+app.use(cors({
+  origin: 'http://localhost:5173', // Your frontend URL
+  credentials: true
+}));
 app.use(express.json());
 
 // Import routes
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const pgRoutes = require("./routes/pgRoutes");
+const wishlistRoutes = require('./routes/wishlist');
+const profileRoutes = require('./routes/profile'); 
 
 // Test route
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
-// API routes
+// API routes - All routes should be defined BEFORE MongoDB connection
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/pgs", pgRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api', profileRoutes);
 
 // MongoDB connection + server start
 mongoose

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X, Camera } from "lucide-react";
+import { userAPI, wishlistAPI, authAPI } from "../services/api";
 import "./Profile.css";
 
 export default function Profile() {
@@ -9,6 +10,9 @@ export default function Profile() {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [wishlistCount, setWishlistCount] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,31 +25,73 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    // Check if user is logged in
-    const loggedIn = localStorage.getItem("loggedIn");
-    if (loggedIn !== "true") {
+    loadUserProfile();
+    loadWishlistCount();
+  }, [navigate]);
+
+  const loadUserProfile = async () => {
+    const isLoggedIn = authAPI.isLoggedIn();
+    
+    if (!isLoggedIn) {
       navigate("/login");
       return;
     }
 
-    // Load user data
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setProfilePhoto(parsedUser.profilePhoto || null);
-      setFormData({
-        name: parsedUser.name || "",
-        email: parsedUser.email || "",
-        phone: parsedUser.phone || "",
-        location: parsedUser.location || "",
-        dateOfBirth: parsedUser.dateOfBirth || "",
-        gender: parsedUser.gender || "",
-        occupation: parsedUser.occupation || "",
-        bio: parsedUser.bio || ""
-      });
+    try {
+      setLoading(true);
+      const currentUser = authAPI.getCurrentUser();
+      
+      if (currentUser) {
+        try {
+          // Try to fetch full user details from API
+          const response = await userAPI.getUserById(currentUser.id || currentUser._id);
+          setUser(response.user);
+          setProfilePhoto(response.user.profilePhoto || null);
+          setFormData({
+            name: response.user.name || "",
+            email: response.user.email || "",
+            phone: response.user.phone || "",
+            location: response.user.location || "",
+            dateOfBirth: response.user.dateOfBirth || "",
+            gender: response.user.gender || "",
+            occupation: response.user.occupation || "",
+            bio: response.user.bio || ""
+          });
+        } catch (apiError) {
+          // If API call fails, fall back to using data from sessionStorage
+          console.warn("API call failed, using cached user data:", apiError);
+          setUser(currentUser);
+          setProfilePhoto(currentUser.profilePhoto || null);
+          setFormData({
+            name: currentUser.name || "",
+            email: currentUser.email || "",
+            phone: currentUser.phone || "",
+            location: currentUser.location || "",
+            dateOfBirth: currentUser.dateOfBirth || "",
+            gender: currentUser.gender || "",
+            occupation: currentUser.occupation || "",
+            bio: currentUser.bio || ""
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+      alert("Failed to load profile");
+      navigate("/login");
+    } finally {
+      setLoading(false);
     }
-  }, [navigate]);
+  };
+
+  const loadWishlistCount = async () => {
+    try {
+      const response = await wishlistAPI.getWishlist();
+      setWishlistCount(response.wishlist?.length || 0);
+    } catch (error) {
+      console.error("Error loading wishlist count:", error);
+      setWishlistCount(0);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -58,34 +104,20 @@ export default function Profile() {
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('File size should be less than 5MB');
         return;
       }
 
-      // Convert image to base64
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result;
         setProfilePhoto(base64String);
-        
-        // Auto-save photo to user data
-        const updatedUser = {
-          ...user,
-          profilePhoto: base64String
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        
-        // Trigger storage event
-        window.dispatchEvent(new Event('storage'));
       };
       reader.readAsDataURL(file);
     }
@@ -97,35 +129,37 @@ export default function Profile() {
 
   const handleRemovePhoto = () => {
     setProfilePhoto(null);
-    const updatedUser = {
-      ...user,
-      profilePhoto: null
-    };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    window.dispatchEvent(new Event('storage'));
   };
 
-  const handleSave = () => {
-    // Update user data
-    const updatedUser = {
-      ...user,
-      ...formData,
-      profilePhoto: profilePhoto
-    };
-    
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    setIsEditing(false);
-    
-    // Trigger storage event for other components
-    window.dispatchEvent(new Event('storage'));
-    
-    alert("Profile updated successfully!");
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      const updatedData = {
+        ...formData,
+        profilePhoto: profilePhoto
+      };
+      
+      await userAPI.updateUser(user._id || user.id, updatedData);
+      
+      // Update local user state
+      const updatedUser = { ...user, ...updatedData };
+      setUser(updatedUser);
+      
+      // Update sessionStorage
+      sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      setIsEditing(false);
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    // Reset form data to original user data
     if (user) {
       setFormData({
         name: user.name || "",
@@ -142,10 +176,32 @@ export default function Profile() {
     setIsEditing(false);
   };
 
+  if (loading) {
+    return (
+      <div className="profile-container">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '60vh' 
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #d4af37',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="profile-container">
-        <div className="loading">Loading...</div>
+        <div className="loading">User not found</div>
       </div>
     );
   }
@@ -153,7 +209,6 @@ export default function Profile() {
   return (
     <div className="profile-container">
       <div className="profile-content">
-        {/* Profile Header */}
         <div className="profile-header">
           <div className="profile-avatar-section">
             <div className="profile-avatar-large">
@@ -176,6 +231,7 @@ export default function Profile() {
               <button 
                 className="change-avatar-btn"
                 onClick={handleChangePhotoClick}
+                disabled={!isEditing}
               >
                 <Camera size={18} />
                 <span>Change Photo</span>
@@ -184,6 +240,7 @@ export default function Profile() {
                 <button 
                   className="remove-avatar-btn"
                   onClick={handleRemovePhoto}
+                  disabled={!isEditing}
                 >
                   <X size={18} />
                   <span>Remove</span>
@@ -209,13 +266,15 @@ export default function Profile() {
                   <button 
                     className="save-btn"
                     onClick={handleSave}
+                    disabled={saving}
                   >
                     <Save size={18} />
-                    <span>Save Changes</span>
+                    <span>{saving ? "Saving..." : "Save Changes"}</span>
                   </button>
                   <button 
                     className="cancel-btn"
                     onClick={handleCancel}
+                    disabled={saving}
                   >
                     <X size={18} />
                     <span>Cancel</span>
@@ -226,9 +285,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Profile Details */}
         <div className="profile-sections">
-          {/* Personal Information */}
           <div className="profile-section">
             <h2 className="section-title">Personal Information</h2>
             <div className="info-grid">
@@ -262,6 +319,7 @@ export default function Profile() {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
+                    disabled
                   />
                 ) : (
                   <p>{formData.email || "Not provided"}</p>
@@ -379,15 +437,12 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Account Statistics */}
           <div className="profile-section">
             <h2 className="section-title">Activity</h2>
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-info">
-                  <span className="stat-value">
-                    {JSON.parse(localStorage.getItem('pgWishlist') || '[]').length}
-                  </span>
+                  <span className="stat-value">{wishlistCount}</span>
                   <span className="stat-label">Wishlisted PGs</span>
                 </div>
               </div>
@@ -415,7 +470,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Quick Actions */}
           <div className="profile-section">
             <h2 className="section-title">Quick Actions</h2>
             <div className="quick-actions">
@@ -431,7 +485,10 @@ export default function Profile() {
               <button className="action-card">
                 <span className="action-text">Notifications</span>
               </button>
-              <button className="action-card">
+              <button 
+                className="action-card"
+                onClick={() => navigate('/settings')}
+              >
                 <span className="action-text">Settings</span>
               </button>
             </div>

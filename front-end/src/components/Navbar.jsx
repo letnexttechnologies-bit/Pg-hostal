@@ -1,9 +1,10 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { LogOut, Heart, Settings, User, Home, Menu, X } from "lucide-react";
+import { authAPI } from "../services/api";
 import "./Navbar.css";
 
-export default function Navbar({ onFiltersChange, filters }) {
+export default function Navbar({ onFiltersChange, filters, onSearch }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
@@ -33,11 +34,11 @@ export default function Navbar({ onFiltersChange, filters }) {
 
   useEffect(() => {
     const checkAuth = () => {
-      const isLoggedIn = localStorage.getItem("loggedIn");
-      const userData = localStorage.getItem("user");
+      const isLoggedIn = authAPI.isLoggedIn();
+      const userData = authAPI.getCurrentUser();
       
-      setLoggedIn(isLoggedIn === "true");
-      setUser(userData ? JSON.parse(userData) : null);
+      setLoggedIn(isLoggedIn);
+      setUser(userData);
     };
 
     checkAuth();
@@ -85,17 +86,26 @@ export default function Navbar({ onFiltersChange, filters }) {
 
   const isActive = (path) => location.pathname === path;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("loggedIn");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("wishlist");
-      
-      setLoggedIn(false);
-      setUser(null);
-      setShowProfileDropdown(false);
-      
-      window.dispatchEvent(new Event('storage'));
+      try {
+        await authAPI.logout();
+        
+        setLoggedIn(false);
+        setUser(null);
+        setShowProfileDropdown(false);
+        
+        window.dispatchEvent(new Event('storage'));
+        navigate('/');
+      } catch (error) {
+        console.error("Error during logout:", error);
+        // Even if API call fails, clear local state
+        authAPI.logout();
+        setLoggedIn(false);
+        setUser(null);
+        setShowProfileDropdown(false);
+        navigate('/');
+      }
     }
   };
 
@@ -110,8 +120,14 @@ export default function Navbar({ onFiltersChange, filters }) {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      if (onSearch) {
+        onSearch(searchQuery.trim());
+      }
       navigate(`/?q=${encodeURIComponent(searchQuery.trim())}`);
     } else {
+      if (onSearch) {
+        onSearch("");
+      }
       navigate("/");
     }
     
