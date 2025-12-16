@@ -1,18 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { authAPI } from "../services/api";
 import "./login.css";
 
 export default function Login() {
-  const DEFAULT_USER = {
-    name: "Test User",
-    email: "test@example.com",
-    password: "password123"
-  };
-
-  useState(() => {
-    if (!localStorage.getItem("user")) {
-      localStorage.setItem("user", JSON.stringify(DEFAULT_USER));
-    }
-  });
+  const navigate = useNavigate();
   
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -47,46 +39,64 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
-    setTimeout(() => {
-      const savedUser = JSON.parse(localStorage.getItem("user"));
+    setErrors({});
 
-      if (
-        !savedUser ||
-        savedUser.email !== email ||
-        savedUser.password !== password
-      ) {
-        setErrors({ login: "Invalid email or password" });
-        setIsLoading(false);
-        return;
-      }
+    try {
+      const response = await authAPI.login({ email, password });
+      
+      // Store token and user data
+      sessionStorage.setItem("token", response.token);
+      sessionStorage.setItem("user", JSON.stringify(response.user));
+      sessionStorage.setItem("loggedIn", "true");
 
-      localStorage.setItem("loggedIn", "true");
-      window.location.href = "/";
-    }, 800);
+      // Show success message briefly
+      setErrors({ success: "Login successful! Redirecting..." });
+
+      // Redirect to home page
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
+
+    } catch (error) {
+      setErrors({ login: error.message || "Invalid email or password" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setErrors({});
 
-    setTimeout(() => {
-      const newUser = { name, email: regEmail, password: regPassword };
-      localStorage.setItem("user", JSON.stringify(newUser));
+    try {
+      const response = await authAPI.register({
+        name,
+        email: regEmail,
+        password: regPassword
+      });
 
-      setErrors({ success: "Registration successful! Redirecting to login..." });
-      setIsLoading(false);
+      // Show success message
+      setErrors({ success: "Registration successful! Please login to continue." });
 
+      // Switch to login mode after 1.5 seconds
       setTimeout(() => {
         switchMode(true);
         setErrors({});
+        // Pre-fill email for convenience
+        setEmail(regEmail);
       }, 1500);
-    }, 800);
+
+    } catch (error) {
+      setErrors({ register: error.message || "Registration failed. Please try again." });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const switchMode = (loginMode) => {
@@ -122,7 +132,6 @@ export default function Login() {
             onClick={() => switchMode(true)}
             disabled={isLoading}
           >
-           
             Login
           </button>
 
@@ -131,7 +140,6 @@ export default function Login() {
             onClick={() => switchMode(false)}
             disabled={isLoading}
           >
-            
             Register
           </button>
         </div>
@@ -139,6 +147,12 @@ export default function Login() {
         {errors.login && (
           <div className="error-message">
             {errors.login}
+          </div>
+        )}
+
+        {errors.register && (
+          <div className="error-message">
+            {errors.register}
           </div>
         )}
 
