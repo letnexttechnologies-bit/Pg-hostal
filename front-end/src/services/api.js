@@ -1,9 +1,12 @@
 // src/services/api.js
 
 // ===============================
-// BASE CONFIG
+// BASE CONFIG (NETLIFY SAFE)
 // ===============================
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL =
+  import.meta.env.VITE_API_URL ??
+  "https://pg-hostal.onrender.com"; // fallback (DOES NOT break anything)
+
 const API_BASE_URL = `${BASE_URL}/api`;
 
 // ===============================
@@ -17,7 +20,7 @@ const fetchAPI = async (endpoint, options = {}) => {
     ...(options.headers || {}),
   };
 
-  // Token handling
+  // Token handling (UNCHANGED)
   const token =
     sessionStorage.getItem("token") ||
     localStorage.getItem("authToken");
@@ -34,7 +37,7 @@ const fetchAPI = async (endpoint, options = {}) => {
 
     const contentType = response.headers.get("content-type");
 
-    // Non-JSON response handling
+    // Non-JSON response handling (UNCHANGED)
     if (!contentType || !contentType.includes("application/json")) {
       if (!response.ok) {
         throw new Error(`HTTP Error ${response.status}`);
@@ -62,7 +65,7 @@ const fetchAPI = async (endpoint, options = {}) => {
 };
 
 // ===============================
-// AUTH API
+// AUTH API (UNCHANGED)
 // ===============================
 export const authAPI = {
   login: (credentials) =>
@@ -104,7 +107,7 @@ export const authAPI = {
 };
 
 // ===============================
-// USER API
+// USER API (UNCHANGED)
 // ===============================
 export const userAPI = {
   createUser: (userData) =>
@@ -130,7 +133,7 @@ export const userAPI = {
 };
 
 // ===============================
-// PG API
+// PG API (UNCHANGED)
 // ===============================
 export const pgAPI = {
   getAllPGs: (query = "") =>
@@ -157,7 +160,7 @@ export const pgAPI = {
 };
 
 // ===============================
-// WISHLIST API
+// WISHLIST API (UNCHANGED)
 // ===============================
 export const wishlistAPI = {
   getWishlist: async () => {
