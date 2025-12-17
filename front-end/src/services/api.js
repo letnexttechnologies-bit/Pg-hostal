@@ -1,11 +1,13 @@
 // src/services/api.js
 
 // Base URL for your backend
-const API_BASE_URL = "http://localhost:5000/api";
+
+const BASE_URL = import.meta.env.VITE_API_URL
+const API_BASE_URL = `${BASE_URL}/api`;
 
 // Generic fetch wrapper with error handling
 const fetchAPI = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint}`; 
   
   const defaultOptions = {
     headers: {
