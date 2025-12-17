@@ -1,277 +1,213 @@
 // src/services/api.js
 
-// Base URL for your backend
-
-const BASE_URL = import.meta.env.VITE_API_URL
+// ===============================
+// BASE CONFIG
+// ===============================
+const BASE_URL = import.meta.env.VITE_API_URL;
 const API_BASE_URL = `${BASE_URL}/api`;
 
-// Generic fetch wrapper with error handling
+// ===============================
+// GENERIC FETCH WRAPPER
+// ===============================
 const fetchAPI = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`; 
-  
-  const defaultOptions = {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
   };
 
-  // Add token to headers if it exists - check both storages
-  const token = sessionStorage.getItem("token") || localStorage.getItem("authToken");
+  // Token handling
+  const token =
+    sessionStorage.getItem("token") ||
+    localStorage.getItem("authToken");
+
   if (token) {
-    defaultOptions.headers["Authorization"] = `Bearer ${token}`;
-    console.log("Token being sent:", token); // Debug log
-  } else {
-    console.warn("No token found in storage"); // Debug log
+    headers.Authorization = `Bearer ${token}`;
   }
 
   try {
-    console.log(`Making ${options.method || 'GET'} request to:`, url); // Debug log
-    const response = await fetch(url, defaultOptions);
-    
-    // Check content type before parsing
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
     const contentType = response.headers.get("content-type");
-    
-    // If response is not JSON, handle it differently
+
+    // Non-JSON response handling
     if (!contentType || !contentType.includes("application/json")) {
       if (!response.ok) {
-        // If it's an error and not JSON, throw a generic error
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP Error ${response.status}`);
       }
-      // If successful but not JSON, return the text
-      const text = await response.text();
-      throw new Error(`Expected JSON but received: ${text.substring(0, 100)}`);
+      throw new Error("Server returned non-JSON response");
     }
-    
+
     const data = await response.json();
-    console.log("Response data:", data); // Debug log
-    
-    // Check if response is ok
+
     if (!response.ok) {
-      throw new Error(data.message || data.error || `HTTP error! status: ${response.status}`);
+      throw new Error(
+        data.message ||
+        data.error ||
+        `HTTP Error ${response.status}`
+      );
     }
 
     return data;
   } catch (error) {
-    // Enhanced error logging
     if (error.message.includes("Failed to fetch")) {
-      console.error("API Error: Cannot connect to server. Is the backend running?");
-      throw new Error("Cannot connect to server. Please check if the backend is running.");
+      throw new Error("Backend server is not reachable");
     }
-    console.error("API Error:", error);
     throw error;
   }
 };
 
-// Auth API calls
+// ===============================
+// AUTH API
+// ===============================
 export const authAPI = {
-  // Login user
-  login: async (credentials) => {
-    return fetchAPI("/auth/login", {
+  login: (credentials) =>
+    fetchAPI("/auth/login", {
       method: "POST",
       body: JSON.stringify(credentials),
-    });
-  },
+    }),
 
-  // Register new user
-  register: async (userData) => {
-    return fetchAPI("/auth/register", {
+  register: (userData) =>
+    fetchAPI("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
-    });
-  },
+    }),
 
-  // Change password
-  changePassword: async (passwordData) => {
-    return fetchAPI("/auth/change-password", {
+  changePassword: (passwordData) =>
+    fetchAPI("/auth/change-password", {
       method: "PUT",
       body: JSON.stringify(passwordData),
-    });
-  },
+    }),
 
-  // Logout (client-side)
   logout: () => {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("user");
-    localStorage.removeItem("loggedIn");
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
+    localStorage.removeItem("loggedIn");
   },
 
-  // Check if user is logged in
-  isLoggedIn: () => {
-    return !!sessionStorage.getItem("token") || !!localStorage.getItem("authToken");
-  },
+  isLoggedIn: () =>
+    !!sessionStorage.getItem("token") ||
+    !!localStorage.getItem("authToken"),
 
-  // Get current user
   getCurrentUser: () => {
-    const sessionUser = sessionStorage.getItem("user");
-    const localUser = localStorage.getItem("user");
-    const user = sessionUser || localUser;
+    const user =
+      sessionStorage.getItem("user") ||
+      localStorage.getItem("user");
     return user ? JSON.parse(user) : null;
-  }
+  },
 };
 
-// User API calls
+// ===============================
+// USER API
+// ===============================
 export const userAPI = {
-  // Create a new user
-  createUser: async (userData) => {
-    return fetchAPI("/users", {
+  createUser: (userData) =>
+    fetchAPI("/users", {
       method: "POST",
       body: JSON.stringify(userData),
-    });
-  },
+    }),
 
-  // Get all users
-  getUsers: async () => {
-    return fetchAPI("/users", {
-      method: "GET",
-    });
-  },
+  getUsers: () => fetchAPI("/users"),
 
-  // Get user by ID
-  getUserById: async (id) => {
-    return fetchAPI(`/users/${id}`, {
-      method: "GET",
-    });
-  },
+  getUserById: (id) => fetchAPI(`/users/${id}`),
 
-  // Update user
-  updateUser: async (id, userData) => {
-    return fetchAPI(`/users/${id}`, {
+  updateUser: (id, userData) =>
+    fetchAPI(`/users/${id}`, {
       method: "PUT",
       body: JSON.stringify(userData),
-    });
-  },
+    }),
 
-  // Delete user
-  deleteUser: async (id) => {
-    return fetchAPI(`/users/${id}`, {
+  deleteUser: (id) =>
+    fetchAPI(`/users/${id}`, {
       method: "DELETE",
-    });
-  }
+    }),
 };
 
-// PG API calls
+// ===============================
+// PG API
+// ===============================
 export const pgAPI = {
-  // Get all PGs
-  getAllPGs: async (query = "") => {
-    return fetchAPI(`/pgs${query ? `?search=${query}` : ''}`, {
-      method: "GET",
-    });
-  },
+  getAllPGs: (query = "") =>
+    fetchAPI(`/pgs${query ? `?search=${query}` : ""}`),
 
-  // Get PG by ID
-  getPGById: async (id) => {
-    return fetchAPI(`/pgs/${id}`, {
-      method: "GET",
-    });
-  },
+  getPGById: (id) => fetchAPI(`/pgs/${id}`),
 
-  // Create new PG (admin)
-  createPG: async (pgData) => {
-    return fetchAPI("/pgs", {
+  createPG: (pgData) =>
+    fetchAPI("/pgs", {
       method: "POST",
       body: JSON.stringify(pgData),
-    });
-  },
+    }),
 
-  // Update PG (admin)
-  updatePG: async (id, pgData) => {
-    return fetchAPI(`/pgs/${id}`, {
+  updatePG: (id, pgData) =>
+    fetchAPI(`/pgs/${id}`, {
       method: "PUT",
       body: JSON.stringify(pgData),
-    });
-  },
+    }),
 
-  // Delete PG (admin)
-  deletePG: async (id) => {
-    return fetchAPI(`/pgs/${id}`, {
+  deletePG: (id) =>
+    fetchAPI(`/pgs/${id}`, {
       method: "DELETE",
-    });
-  }
+    }),
 };
 
-// Wishlist API calls
+// ===============================
+// WISHLIST API
+// ===============================
 export const wishlistAPI = {
-  // Get user's wishlist
   getWishlist: async () => {
     try {
-      return await fetchAPI("/wishlist", {
-        method: "GET",
-      });
+      return await fetchAPI("/wishlist");
     } catch (error) {
-      // If wishlist endpoint doesn't exist, try user-based endpoint
-      if (error.message.includes("404")) {
-        const user = authAPI.getCurrentUser();
-        if (user && user.id) {
-          return await fetchAPI(`/users/${user.id}/wishlist`, {
-            method: "GET",
-          });
-        }
+      const user = authAPI.getCurrentUser();
+      if (user?.id) {
+        return fetchAPI(`/users/${user.id}/wishlist`);
       }
       throw error;
     }
   },
 
-  // Add to wishlist
   addToWishlist: async (pgId) => {
     try {
       return await fetchAPI("/wishlist", {
         method: "POST",
         body: JSON.stringify({ pgId }),
       });
-    } catch (error) {
-      // If wishlist endpoint doesn't exist, try user-based endpoint or alternate format
-      if (error.message.includes("404")) {
-        const user = authAPI.getCurrentUser();
-        if (user && user.id) {
-          // Try alternate endpoint structure
-          try {
-            return await fetchAPI(`/users/${user.id}/wishlist`, {
-              method: "POST",
-              body: JSON.stringify({ pgId }),
-            });
-          } catch (err) {
-            // Try with pgId in URL
-            return await fetchAPI(`/wishlist/add/${pgId}`, {
-              method: "POST",
-            });
-          }
-        }
+    } catch {
+      const user = authAPI.getCurrentUser();
+      if (user?.id) {
+        return fetchAPI(`/users/${user.id}/wishlist`, {
+          method: "POST",
+          body: JSON.stringify({ pgId }),
+        });
       }
-      throw error;
+      throw new Error("Unable to add to wishlist");
     }
   },
 
-  // Remove from wishlist
   removeFromWishlist: async (pgId) => {
     try {
       return await fetchAPI(`/wishlist/${pgId}`, {
         method: "DELETE",
       });
-    } catch (error) {
-      // If wishlist endpoint doesn't exist, try alternate formats
-      if (error.message.includes("404")) {
-        const user = authAPI.getCurrentUser();
-        if (user && user.id) {
-          try {
-            return await fetchAPI(`/users/${user.id}/wishlist/${pgId}`, {
-              method: "DELETE",
-            });
-          } catch (err) {
-            // Try with remove in URL
-            return await fetchAPI(`/wishlist/remove/${pgId}`, {
-              method: "DELETE",
-            });
-          }
-        }
+    } catch {
+      const user = authAPI.getCurrentUser();
+      if (user?.id) {
+        return fetchAPI(`/users/${user.id}/wishlist/${pgId}`, {
+          method: "DELETE",
+        });
       }
-      throw error;
+      throw new Error("Unable to remove from wishlist");
     }
-  }
+  },
 };
 
-// Export the base fetch function for custom calls
+// ===============================
+// EXPORT
+// ===============================
 export default fetchAPI;
