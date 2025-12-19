@@ -2,27 +2,8 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-// PG Model Schema
-const pgSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  location: { type: String, required: true },
-  address: { type: String },
-  price: { type: Number, required: true },
-  gender: { type: String, required: true },
-  stayType: { type: String },
-  sharingType: { type: String },
-  amenities: [String],
-  description: { type: String },
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
-  images: [String],
-  phone: { type: String },
-  email: { type: String },
-  ownerName: { type: String },
-  isActive: { type: Boolean, default: true },
-}, { timestamps: true });
-
-const PG = mongoose.model("PG", pgSchema);
+// ✅ Import the existing PG model
+const PG = require("./models/PG");
 
 // Your PG Data
 const pgData = [
@@ -40,6 +21,8 @@ const pgData = [
     description: "Comfortable PG near bus stand with good connectivity. Perfect for working professionals and students.",
     phone: "+91 9876543210",
     email: "srilakshmi@pgmail.com",
+    ownerName: "Lakshmi",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
@@ -61,6 +44,8 @@ const pgData = [
     description: "Secure ladies hostel with 24/7 security. Near colleges and market area.",
     phone: "+91 9876543211",
     email: "greenvalley@pgmail.com",
+    ownerName: "Green Valley",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800",
@@ -81,6 +66,8 @@ const pgData = [
     description: "Premium private rooms with AC. Ideal for professionals working in nearby industries.",
     phone: "+91 9876543212",
     email: "comfort@pgmail.com",
+    ownerName: "Comfort",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?w=800",
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
@@ -102,6 +89,8 @@ const pgData = [
     description: "Luxurious ladies PG with premium amenities and excellent safety measures.",
     phone: "+91 9876543214",
     email: "royal@pgmail.com",
+    ownerName: "Royal",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800",
@@ -123,6 +112,8 @@ const pgData = [
     description: "Right in the heart of town. Easy access to shops, banks, and transport.",
     phone: "+91 9876543215",
     email: "towncenter@pgmail.com",
+    ownerName: "Town Center",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
       "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
@@ -143,6 +134,8 @@ const pgData = [
     description: "Modern co-living space with peaceful surroundings. Good for IT and textile professionals.",
     phone: "+91 9876543216",
     email: "peacock@pgmail.com",
+    ownerName: "Peacock",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800",
@@ -163,6 +156,8 @@ const pgData = [
     description: "Budget-friendly PG near colleges with study facilities and library.",
     phone: "+91 9876543217",
     email: "studenthub@pgmail.com",
+    ownerName: "Student Hub",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800"
@@ -182,6 +177,8 @@ const pgData = [
     description: "Safe and secure ladies hostel with home-like environment. Near scenic locations.",
     phone: "+91 9876543218",
     email: "kaveri@pgmail.com",
+    ownerName: "Kaveri",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800",
@@ -202,6 +199,8 @@ const pgData = [
     description: "Perfect for textile industry professionals. Close to major mills and factories.",
     phone: "+91 9876543219",
     email: "textilepark@pgmail.com",
+    ownerName: "Textile Park",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
       "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
@@ -223,6 +222,8 @@ const pgData = [
     description: "Peaceful location with hill views. Private rooms with modern amenities.",
     phone: "+91 9876543220",
     email: "hillview@pgmail.com",
+    ownerName: "Hillview",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800",
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800",
@@ -243,6 +244,8 @@ const pgData = [
     description: "Most economical option near hospital and medical facilities.",
     phone: "+91 9876543221",
     email: "economy@pgmail.com",
+    ownerName: "Economy",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800",
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800"
@@ -262,6 +265,8 @@ const pgData = [
     description: "Premium accommodation for working women with housekeeping services.",
     phone: "+91 9876543222",
     email: "executive@pgmail.com",
+    ownerName: "Executive",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800",
@@ -283,6 +288,8 @@ const pgData = [
     description: "Central location with easy access to all parts of the town.",
     phone: "+91 9876543223",
     email: "citycenter@pgmail.com",
+    ownerName: "City Center",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
       "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
@@ -303,6 +310,8 @@ const pgData = [
     description: "Modern PG with WiFi and good food. Near medical facilities.",
     phone: "+91 9876543224",
     email: "smartliving@pgmail.com",
+    ownerName: "Smart Living",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800",
@@ -323,6 +332,8 @@ const pgData = [
     description: "Peaceful location near temple. Vegetarian food and spiritual environment.",
     phone: "+91 9876543225",
     email: "templeview@pgmail.com",
+    ownerName: "Temple View",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
@@ -343,6 +354,8 @@ const pgData = [
     description: "Ideal for factory and industrial workers. Near SIDCO estate.",
     phone: "+91 9876543226",
     email: "industrial@pgmail.com",
+    ownerName: "Industrial",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800",
@@ -363,6 +376,8 @@ const pgData = [
     description: "Student-friendly accommodation near multiple colleges.",
     phone: "+91 9876543227",
     email: "collegeroad@pgmail.com",
+    ownerName: "College Road",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800"
@@ -382,6 +397,8 @@ const pgData = [
     description: "Premium private rooms with all modern amenities and security.",
     phone: "+91 9876543228",
     email: "premium@pgmail.com",
+    ownerName: "Premium",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800",
@@ -403,6 +420,8 @@ const pgData = [
     description: "Well-maintained PG in residential area with good security.",
     phone: "+91 9876543229",
     email: "greenpark@pgmail.com",
+    ownerName: "Green Park",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
       "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
@@ -423,6 +442,8 @@ const pgData = [
     description: "Central market location with shopping and banking facilities nearby.",
     phone: "+91 9876543230",
     email: "star@pgmail.com",
+    ownerName: "Star",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800",
@@ -443,6 +464,8 @@ const pgData = [
     description: "Homely environment for working women with quality food.",
     phone: "+91 9876543231",
     email: "lakshmivilas@pgmail.com",
+    ownerName: "Lakshmi Vilas",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800",
@@ -463,6 +486,8 @@ const pgData = [
     description: "Comfortable stay with spacious rooms and good ventilation.",
     phone: "+91 9876543232",
     email: "comfortzone@pgmail.com",
+    ownerName: "Comfort Zone",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800",
       "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800",
@@ -483,6 +508,8 @@ const pgData = [
     description: "Budget-friendly hostel for engineering and polytechnic students.",
     phone: "+91 9876543233",
     email: "youth@pgmail.com",
+    ownerName: "Youth",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "https://images.unsplash.com/photo-1631679706909-1844bbd07221?w=800"
@@ -502,6 +529,8 @@ const pgData = [
     description: "Elite accommodation with premium facilities and dedicated housekeeping.",
     phone: "+91 9876543234",
     email: "elite@pgmail.com",
+    ownerName: "Elite",
+    isActive: true,
     images: [
       "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=800",
       "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?w=800",
@@ -511,37 +540,30 @@ const pgData = [
   }
 ];
 
-// Seed function
-async function seedDatabase() {
+async function seedPGs() {
   try {
-    // Connect to MongoDB
+    // ✅ MongoDB connection
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ Connected to MongoDB");
+    console.log("✅ MongoDB connected");
 
-    // Clear existing PG data (optional - remove this if you want to keep existing data)
-    await PG.deleteMany({});
-    console.log("🗑️  Cleared existing PG data");
+    // ✅ Clear existing PGs
+    const deleteResult = await PG.deleteMany({});
+    console.log(`🗑️  Removed ${deleteResult.deletedCount} existing PGs`);
 
-    // Insert all PGs
-    const result = await PG.insertMany(pgData);
-    console.log(`✅ Successfully added ${result.length} PGs to the database!`);
+    // ✅ Insert new data
+    const insertResult = await PG.insertMany(pgData);
+    console.log(`🎉 Successfully seeded ${insertResult.length} PGs`);
 
-    // Display summary
-    console.log("\n📊 Summary:");
-    console.log(`   Total PGs: ${result.length}`);
-    console.log(`   Male PGs: ${result.filter(pg => pg.gender === "Male").length}`);
-    console.log(`   Female PGs: ${result.filter(pg => pg.gender === "Female").length}`);
-    console.log(`   Co-living PGs: ${result.filter(pg => pg.gender === "Co-living").length}`);
+    // ✅ Verify data
+    const count = await PG.countDocuments();
+    console.log(`📊 Total PGs in database: ${count}`);
 
-    // Close connection
-    await mongoose.connection.close();
-    console.log("\n✅ Database seeding completed successfully!");
     process.exit(0);
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+    console.error("❌ Seeding failed:", error.message);
+    console.error(error);
     process.exit(1);
   }
 }
 
-// Run the seed function
-seedDatabase();
+seedPGs();

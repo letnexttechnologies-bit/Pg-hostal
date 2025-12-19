@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Heart, ChevronLeft, ChevronRight, ArrowLeft, HeartOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { wishlistAPI, authAPI } from "../services/api";
+import { wishlistAPI } from "../services/api";
+import { useAuth } from "../AuthContext";
 
 function WishlistPGCard({ pg, onRemove, onNavigate }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -297,26 +298,59 @@ function WishlistPGCard({ pg, onRemove, onNavigate }) {
 export default function Wishlist() {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuth();
 
   useEffect(() => {
-    loadWishlist();
-  }, []);
-
-  const loadWishlist = async () => {
-    const isLoggedIn = authAPI.isLoggedIn();
-    
-    if (!isLoggedIn) {
-      navigate('/login');
+    // Check authentication first
+    if (!isAuthenticated) {
+      console.log('❌ Not authenticated, redirecting to login');
+      navigate('/login', { 
+        state: { 
+          from: '/wishlist',
+          message: 'Please login to view your wishlist' 
+        } 
+      });
       return;
     }
 
+    loadWishlist();
+  }, [isAuthenticated, navigate]);
+
+  const loadWishlist = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('📋 Loading wishlist for user:', user?.name);
+      
       const response = await wishlistAPI.getWishlist();
       setWishlistItems(response.wishlist || []);
+      
+      console.log('✅ Wishlist loaded:', response.wishlist?.length || 0, 'items');
     } catch (error) {
-      console.error("Error loading wishlist:", error);
+      console.error("❌ Error loading wishlist:", error);
+      
+      // Handle 401 Unauthorized errors
+      if (error.message.includes('Unauthorized') || error.message.includes('Invalid token')) {
+        console.log('🔓 Token invalid - logging out and redirecting');
+        setError('Your session has expired. Please login again.');
+        
+        // Clear auth and redirect after a short delay
+        setTimeout(() => {
+          logout();
+          navigate('/login', { 
+            state: { 
+              from: '/wishlist',
+              message: 'Session expired. Please login again.' 
+            },
+            replace: true
+          });
+        }, 2000);
+      } else {
+        setError('Failed to load wishlist. Please try again.');
+      }
+      
       setWishlistItems([]);
     } finally {
       setLoading(false);
@@ -327,9 +361,17 @@ export default function Wishlist() {
     try {
       await wishlistAPI.removeFromWishlist(id);
       setWishlistItems(wishlistItems.filter((item) => (item._id || item.id) !== id));
+      console.log('✅ Removed from wishlist');
     } catch (error) {
-      console.error("Error removing from wishlist:", error);
-      alert("Failed to remove from wishlist");
+      console.error("❌ Error removing from wishlist:", error);
+      
+      if (error.message.includes('Unauthorized')) {
+        alert('Your session has expired. Please login again.');
+        logout();
+        navigate('/login', { replace: true });
+      } else {
+        alert("Failed to remove from wishlist");
+      }
     }
   };
 
@@ -347,7 +389,9 @@ export default function Wishlist() {
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
-          height: '60vh' 
+          height: '60vh',
+          flexDirection: 'column',
+          gap: '20px'
         }}>
           <div style={{
             width: '50px',
@@ -357,6 +401,78 @@ export default function Wishlist() {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
+          <p style={{ color: '#666', fontSize: '16px' }}>Loading your wishlist...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#ffffff",
+          padding: "40px 20px",
+          fontFamily: '"Poppins", sans-serif',
+        }}
+      >
+        <button className="back-button" onClick={() => navigate(-1)}>
+          <ArrowLeft size={20} />
+          <span>Back</span>
+        </button>
+
+        <div
+          style={{
+            textAlign: "center",
+            padding: "60px 20px",
+            color: "#666",
+            fontSize: "18px",
+            maxWidth: "600px",
+            margin: "0 auto"
+          }}
+        >
+          <div style={{ 
+            fontSize: "64px", 
+            marginBottom: "20px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center"
+          }}>
+            <HeartOff size={64} strokeWidth={1.5} color="#ff4757" />
+          </div>
+          <p style={{ 
+            marginBottom: "10px", 
+            fontWeight: "600",
+            color: "#ff4757",
+            fontSize: "20px"
+          }}>
+            {error}
+          </p>
+          <p style={{ marginBottom: "20px" }}>
+            {error.includes('expired') 
+              ? 'Redirecting to login...' 
+              : 'Please try again later.'}
+          </p>
+          {!error.includes('expired') && (
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                padding: "12px 24px",
+                background: "linear-gradient(135deg, #d4af37 0%, #c5940a 100%)",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                marginTop: "20px"
+              }}
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );

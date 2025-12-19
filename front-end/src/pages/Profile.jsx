@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Mail, Phone, MapPin, Calendar, Edit2, Save, X, Camera } from "lucide-react";
-import { userAPI, wishlistAPI, authAPI } from "../services/api";
+import { userAPI, wishlistAPI } from "../services/api";
+import { useAuth } from "../AuthContext";
 import "./Profile.css";
 
 export default function Profile() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const { user: authUser, isAuthenticated, checkAuth } = useAuth();
+  
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -25,80 +28,83 @@ export default function Profile() {
   });
 
   useEffect(() => {
-    loadUserProfile();
-    loadWishlistCount();
-  }, [navigate]);
-
-  const loadUserProfile = async () => {
-    const isLoggedIn = authAPI.isLoggedIn();
-    
-    if (!isLoggedIn) {
-      navigate("/login");
+    // Check authentication first
+    if (!isAuthenticated || !authUser) {
+      console.log('❌ Not authenticated, redirecting to login');
+      navigate('/login', {
+        state: {
+          from: '/profile',
+          message: 'Please login to view your profile'
+        }
+      });
       return;
     }
 
+    loadUserProfile();
+    loadWishlistCount();
+  }, [isAuthenticated, authUser, navigate]);
+
+  const loadUserProfile = async () => {
     try {
       setLoading(true);
-      const currentUser = authAPI.getCurrentUser();
+      console.log('📋 Loading profile for user:', authUser?.name);
       
-      if (currentUser) {
-        try {
-          // Try to fetch full user details from API
-          const userId = currentUser.id || currentUser._id;
-          const response = await userAPI.getUserById(userId);
-          const fullUser = response.user;
-          
-          setUser(fullUser);
-          setProfilePhoto(fullUser.profilePhoto || null);
-          setFormData({
-            name: fullUser.name || "",
-            email: fullUser.email || "",
-            phone: fullUser.phone || "",
-            location: fullUser.location || "",
-            dateOfBirth: fullUser.dateOfBirth || "",
-            gender: fullUser.gender || "",
-            occupation: fullUser.occupation || "",
-            bio: fullUser.bio || ""
-          });
+      if (!authUser) {
+        throw new Error('No authenticated user');
+      }
 
-          // Update sessionStorage/localStorage with full user data including profile photo
-          const updatedUserData = {
-            id: fullUser._id || fullUser.id,
-            name: fullUser.name,
-            email: fullUser.email,
-            role: fullUser.role,
-            profilePhoto: fullUser.profilePhoto
-          };
-          
-          // Update both storages
-          if (sessionStorage.getItem("user")) {
-            sessionStorage.setItem("user", JSON.stringify(updatedUserData));
-          }
-          if (localStorage.getItem("user")) {
-            localStorage.setItem("user", JSON.stringify(updatedUserData));
-          }
+      try {
+        // Try to fetch full user details from API
+        const userId = authUser.id || authUser._id;
+        const response = await userAPI.getUserById(userId);
+        const fullUser = response.user;
+        
+        setUser(fullUser);
+        setProfilePhoto(fullUser.profilePhoto || null);
+        setFormData({
+          name: fullUser.name || "",
+          email: fullUser.email || "",
+          phone: fullUser.phone || "",
+          location: fullUser.location || "",
+          dateOfBirth: fullUser.dateOfBirth || "",
+          gender: fullUser.gender || "",
+          occupation: fullUser.occupation || "",
+          bio: fullUser.bio || ""
+        });
 
-        } catch (apiError) {
-          // If API call fails, fall back to using data from sessionStorage
-          console.warn("API call failed, using cached user data:", apiError);
-          setUser(currentUser);
-          setProfilePhoto(currentUser.profilePhoto || null);
-          setFormData({
-            name: currentUser.name || "",
-            email: currentUser.email || "",
-            phone: currentUser.phone || "",
-            location: currentUser.location || "",
-            dateOfBirth: currentUser.dateOfBirth || "",
-            gender: currentUser.gender || "",
-            occupation: currentUser.occupation || "",
-            bio: currentUser.bio || ""
+        console.log('✅ Profile loaded successfully');
+      } catch (apiError) {
+        // If API call fails, fall back to using data from authUser
+        console.warn("API call failed, using cached user data:", apiError);
+        
+        if (apiError.message.includes('Unauthorized')) {
+          // Token expired, redirect to login
+          navigate('/login', {
+            state: {
+              from: '/profile',
+              message: 'Session expired. Please login again.'
+            }
           });
+          return;
         }
+        
+        setUser(authUser);
+        setProfilePhoto(authUser.profilePhoto || null);
+        setFormData({
+          name: authUser.name || "",
+          email: authUser.email || "",
+          phone: authUser.phone || "",
+          location: authUser.location || "",
+          dateOfBirth: authUser.dateOfBirth || "",
+          gender: authUser.gender || "",
+          occupation: authUser.occupation || "",
+          bio: authUser.bio || ""
+        });
       }
     } catch (error) {
-      console.error("Error loading profile:", error);
+      console.error("❌ Error loading profile:", error);
       alert("Failed to load profile");
-      navigate("/login");
+      navigate('/login');
     } finally {
       setLoading(false);
     }
@@ -167,27 +173,14 @@ export default function Profile() {
       const updatedUser = { ...user, ...updatedData };
       setUser(updatedUser);
       
-      // Update sessionStorage AND localStorage with profile photo
-      const userDataForStorage = {
-        id: updatedUser._id || updatedUser.id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        profilePhoto: updatedUser.profilePhoto // Include profile photo
-      };
-
-      // Update both storages
-      if (sessionStorage.getItem("user")) {
-        sessionStorage.setItem("user", JSON.stringify(userDataForStorage));
-      }
-      if (localStorage.getItem("user")) {
-        localStorage.setItem("user", JSON.stringify(userDataForStorage));
-      }
+      // Trigger auth check to update context
+      checkAuth();
       
       setIsEditing(false);
       alert("Profile updated successfully!");
+      console.log('✅ Profile updated');
     } catch (error) {
-      console.error("Error updating profile:", error);
+      console.error("❌ Error updating profile:", error);
       alert("Failed to update profile. Please try again.");
     } finally {
       setSaving(false);

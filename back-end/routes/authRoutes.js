@@ -21,8 +21,8 @@ router.put("/change-password", auth, async (req, res) => {
       });
     }
 
-    // Get user from database
-    const user = await User.findById(req.user.id);
+    // Get user from database - CHANGED: Use req.userId instead of req.user.id
+    const user = await User.findById(req.userId);
     
     if (!user) {
       return res.status(404).json({ error: "User not found" });

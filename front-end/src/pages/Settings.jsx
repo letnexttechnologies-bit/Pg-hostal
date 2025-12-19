@@ -3,23 +3,23 @@ import { useNavigate } from "react-router-dom";
 import { 
   Bell, 
   Lock, 
-  Globe, 
   Eye, 
   Trash2, 
   Download,
   Shield,
-  Moon,
-  Sun,
   Mail,
   Smartphone,
   AlertCircle,
   Check
 } from "lucide-react";
-import { userAPI, wishlistAPI, authAPI } from "../services/api";
+import { userAPI, wishlistAPI } from "../services/api";
+import { useAuth } from "../AuthContext";
 import "./Settings.css";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { user: authUser, isAuthenticated, logout: authLogout } = useAuth();
+  
   const [user, setUser] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -40,64 +40,67 @@ export default function Settings() {
   });
 
   useEffect(() => {
+    // Check authentication first
+    if (!isAuthenticated || !authUser) {
+      console.log('❌ Not authenticated, redirecting to login');
+      navigate('/login', {
+        state: {
+          from: '/settings',
+          message: 'Please login to access settings'
+        }
+      });
+      return;
+    }
+
     loadUserAndSettings();
-  }, []);
+  }, [isAuthenticated, authUser, navigate]);
 
   const loadUserAndSettings = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Check if user is logged in
-      const isLoggedIn = authAPI.isLoggedIn();
-      if (!isLoggedIn) {
-        navigate("/login");
-        return;
-      }
-
-      // Get current user from auth
-      const currentUser = authAPI.getCurrentUser();
-      console.log("Current user from auth:", currentUser);
+      console.log('⚙️ Loading user and settings for:', authUser?.name);
       
-      if (!currentUser) {
-        console.error("No current user found");
-        navigate("/login");
-        return;
+      if (!authUser) {
+        throw new Error('No authenticated user');
       }
 
-      // Check if user has an id property
-      const userId = currentUser.id || currentUser._id || currentUser.userId;
+      const userId = authUser.id || authUser._id;
       
       if (!userId) {
-        console.error("User object has no ID:", currentUser);
-        setError("Invalid user session. Please log in again.");
-        setTimeout(() => navigate("/login"), 2000);
-        return;
+        throw new Error("Invalid user session");
       }
 
-      console.log("Fetching user with ID:", userId);
+      console.log("📥 Fetching user with ID:", userId);
       
-      // Fetch full user data
       const response = await userAPI.getUserById(userId);
-      console.log("User data response:", response);
+      console.log("✅ User data response:", response);
       
       if (response && response.user) {
         setUser(response.user);
         
-        // Load settings from user data or use defaults
         if (response.user.settings) {
           setSettings(response.user.settings);
         }
+        
+        console.log('✅ Settings loaded successfully');
       } else {
         throw new Error("Invalid response format");
       }
     } catch (error) {
-      console.error("Error loading user data:", error);
+      console.error("❌ Error loading user data:", error);
       setError(error.message || "Failed to load user data");
       
-      // If it's an auth error, redirect to login
-      if (error.message?.includes("401") || error.message?.includes("token")) {
-        setTimeout(() => navigate("/login"), 2000);
+      if (error.message?.includes("401") || 
+          error.message?.includes("token") || 
+          error.message?.includes("Unauthorized")) {
+        navigate('/login', {
+          state: {
+            from: '/settings',
+            message: 'Session expired. Please login again.'
+          }
+        });
       }
     } finally {
       setLoading(false);
@@ -129,10 +132,12 @@ export default function Settings() {
         throw new Error("User ID not found");
       }
       
+      console.log('💾 Saving settings...');
       await userAPI.updateUser(userId, { settings: newSettings });
       showSaveMessage();
+      console.log('✅ Settings saved');
     } catch (error) {
-      console.error("Error saving settings:", error);
+      console.error("❌ Error saving settings:", error);
       alert("Failed to save settings: " + (error.message || "Unknown error"));
     }
   };
@@ -144,6 +149,7 @@ export default function Settings() {
 
   const handleExportData = async () => {
     try {
+      console.log('📤 Exporting data...');
       const wishlistResponse = await wishlistAPI.getWishlist();
       
       const userData = {
@@ -166,9 +172,10 @@ export default function Settings() {
       link.click();
       URL.revokeObjectURL(url);
       
+      console.log('✅ Data exported successfully');
       alert("Data exported successfully!");
     } catch (error) {
-      console.error("Error exporting data:", error);
+      console.error("❌ Error exporting data:", error);
       alert("Failed to export data: " + (error.message || "Unknown error"));
     }
   };
@@ -176,22 +183,23 @@ export default function Settings() {
   const handleDeleteAccount = async () => {
     setShowDeleteConfirm(false);
     
-    if (window.confirm("Are you absolutely sure? This action cannot be undone. Type DELETE to confirm.")) {
+    if (window.confirm("Are you absolutely sure? Type DELETE to confirm.")) {
       try {
         const userId = user._id || user.id;
         if (!userId) {
           throw new Error("User ID not found");
         }
         
+        console.log('🗑️ Deleting account...');
         await userAPI.deleteUser(userId);
         
-        // Clear all session data
-        authAPI.logout();
+        authLogout();
         
+        console.log('✅ Account deleted');
         alert("Account deleted successfully");
-        navigate("/login");
+        navigate("/login", { replace: true });
       } catch (error) {
-        console.error("Error deleting account:", error);
+        console.error("❌ Error deleting account:", error);
         alert("Failed to delete account: " + (error.message || "Unknown error"));
       }
     }
@@ -199,6 +207,11 @@ export default function Settings() {
 
   const handleChangePassword = () => {
     navigate("/change-password");
+  };
+
+  const handleLogout = () => {
+    authLogout();
+    navigate("/login", { replace: true });
   };
 
   if (loading) {
@@ -220,7 +233,7 @@ export default function Settings() {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
-          <p>Loading your settings...</p>
+          <p style={{ color: '#666', fontSize: '16px' }}>Loading your settings...</p>
         </div>
       </div>
     );
@@ -259,35 +272,7 @@ export default function Settings() {
   }
 
   if (!user) {
-    return (
-      <div className="settings-container">
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '60vh',
-          gap: '20px'
-        }}>
-          <AlertCircle size={48} color="#e74c3c" />
-          <h2>User Not Found</h2>
-          <p>Please log in to access settings</p>
-          <button 
-            onClick={() => navigate("/login")}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#d4af37',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
-            Go to Login
-          </button>
-        </div>
-      </div>
-    );
+    return null; // Will redirect via useEffect
   }
 
   return (
@@ -489,57 +474,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Appearance Section
-        <div className="settings-section">
-          <div className="section-header">
-            <Sun size={24} />
-            <div>
-              <h2>Appearance</h2>
-              <p>Customize how PGFinder looks</p>
-            </div>
-          </div>
-
-          <div className="settings-list">
-            <div className="setting-item">
-              <div className="setting-info">
-                <Moon size={20} />
-                <div>
-                  <h3>Dark Mode</h3>
-                  <p>Use dark theme</p>
-                </div>
-              </div>
-              <label className="toggle-switch">
-                <input
-                  type="checkbox"
-                  checked={settings.darkMode}
-                  onChange={() => handleToggle('darkMode')}
-                />
-                <span className="toggle-slider"></span>
-              </label>
-            </div>
-
-            <div className="setting-item">
-              <div className="setting-info">
-                <Globe size={20} />
-                <div>
-                  <h3>Language</h3>
-                  <p>Select your preferred language</p>
-                </div>
-              </div>
-              <select
-                className="setting-select"
-                value={settings.language}
-                onChange={(e) => handleSelectChange('language', e.target.value)}
-              >
-                <option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="ta">Tamil</option>
-                <option value="te">Telugu</option>
-              </select>
-            </div>
-          </div>
-        </div> */}
-
         {/* Data & Account Section */}
         <div className="settings-section">
           <div className="section-header">
@@ -577,6 +511,22 @@ export default function Settings() {
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 Delete
+              </button>
+            </div>
+
+            <div className="setting-item">
+              <div className="setting-info">
+                <Lock size={20} />
+                <div>
+                  <h3>Logout</h3>
+                  <p>Sign out of your account</p>
+                </div>
+              </div>
+              <button 
+                className="action-btn secondary" 
+                onClick={handleLogout}
+              >
+                Logout
               </button>
             </div>
           </div>

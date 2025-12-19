@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom"; 
 import MapView from "../components/MapView";
 import { pgAPI, wishlistAPI, authAPI } from "../services/api";
+import { useAuth } from "../AuthContext";
 import "./Home.css";
 
 // PG Card Component with Enhanced Image Slideshow
@@ -13,7 +14,6 @@ function PGCard({ pg, onWishlistToggle, isInWishlist, onNavigate }) {
     ? pg.images 
     : (pg.image ? [pg.image] : ['https://via.placeholder.com/400x300?text=No+Image']);
 
-  // Get the PG ID safely
   const pgId = pg._id || pg.id;
 
   useEffect(() => {
@@ -49,7 +49,6 @@ function PGCard({ pg, onWishlistToggle, isInWishlist, onNavigate }) {
     setCurrentImageIndex(index);
   };
 
-  // Check if in wishlist safely
   const inWishlist = pgId ? isInWishlist(pgId) : false;
 
   return (
@@ -90,26 +89,20 @@ function PGCard({ pg, onWishlistToggle, isInWishlist, onNavigate }) {
                 <polyline points="9 18 15 12 9 6"></polyline>
               </svg>
             </button>
+            <div className="image-indicators">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  className={`indicator-dot ${index === currentImageIndex ? 'active' : ''}`}
+                  onClick={(e) => goToImage(index, e)}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+            <div className="image-counter">
+              {currentImageIndex + 1} / {images.length}
+            </div>
           </>
-        )}
-
-        {images.length > 1 && (
-          <div className="image-indicators">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                className={`indicator-dot ${index === currentImageIndex ? 'active' : ''}`}
-                onClick={(e) => goToImage(index, e)}
-                aria-label={`Go to image ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
-
-        {images.length > 1 && (
-          <div className="image-counter">
-            {currentImageIndex + 1} / {images.length}
-          </div>
         )}
       
         <button
@@ -150,6 +143,8 @@ function PGCard({ pg, onWishlistToggle, isInWishlist, onNavigate }) {
 export default function Home({ searchQuery: propSearchQuery }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, user } = useAuth();
+  
   const [userLocation, setUserLocation] = useState([12.9716, 80.2209]); 
   const [pgsWithDistance, setPGsWithDistance] = useState([]);
   const [showMap, setShowMap] = useState(false);
@@ -158,12 +153,14 @@ export default function Home({ searchQuery: propSearchQuery }) {
   const [isLoadingPGs, setIsLoadingPGs] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Update search query from props
   useEffect(() => {
     if (propSearchQuery !== undefined) {
       setSearchQuery(propSearchQuery);
     }
   }, [propSearchQuery]);
 
+  // Load user location
   useEffect(() => {
     setIsLoadingLocation(true);
     
@@ -179,23 +176,63 @@ export default function Home({ searchQuery: propSearchQuery }) {
         setIsLoadingLocation(false);
       }
     );
+  }, []);
 
+  // Load PGs on mount
+  useEffect(() => {
+    loadPGs();
+  }, [userLocation]);
+
+  // ✅ CRITICAL FIX: Only load wishlist if ACTUALLY authenticated
+  useEffect(() => {
+    console.log('🔄 [Home] Auth state changed:', { 
+      isAuthenticated, 
+      userName: user?.name,
+      hasToken: !!authAPI.isLoggedIn()
+    });
+    
+    // Double-check authentication before loading wishlist
+    if (isAuthenticated && user && authAPI.isLoggedIn()) {
+      console.log('✅ [Home] User is authenticated, loading wishlist');
+      loadWishlist();
+    } else {
+      console.log('❌ [Home] Not authenticated, clearing wishlist');
+      setWishlist([]);
+    }
+  }, [isAuthenticated, user]);
+
+  // Handle search query from location state
+  useEffect(() => {
     if (location.state?.searchQuery) {
       setSearchQuery(location.state.searchQuery);
     }
 
-    // Load PGs and wishlist
-    loadPGs();
-    loadWishlist();
-  }, [location.state]);
+    // Handle pending wishlist action after login
+    if (location.state?.pendingWishlistAction && isAuthenticated) {
+      console.log('📌 Processing pending wishlist action after login');
+      const pgToAdd = location.state.pendingWishlistAction;
+      addToWishlistAfterLogin(pgToAdd);
+      // Clear the state
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, isAuthenticated, navigate]);
 
   const loadPGs = async () => {
     try {
       setIsLoadingPGs(true);
+      console.log("📥 Fetching PGs from API...");
       const response = await pgAPI.getAllPGs();
       
-      // Calculate distance for each PG
-      const pgsWithDist = response.pgs.map((pg) => {
+      const pgsArray = response.data || response.pgs || [];
+      console.log(`📊 Found ${pgsArray.length} PGs`);
+      
+      if (!Array.isArray(pgsArray)) {
+        console.error("❌ PGs data is not an array:", pgsArray);
+        setPGsWithDistance([]);
+        return;
+      }
+      
+      const pgsWithDist = pgsArray.map((pg) => {
         const dist = getDistance(
           userLocation[0], userLocation[1],
           pg.latitude, pg.longitude
@@ -205,8 +242,7 @@ export default function Home({ searchQuery: propSearchQuery }) {
       
       setPGsWithDistance(pgsWithDist);
     } catch (error) {
-      console.error("Error loading PGs:", error);
-      // Fallback to empty array if API fails
+      console.error("❌ Error loading PGs:", error);
       setPGsWithDistance([]);
     } finally {
       setIsLoadingPGs(false);
@@ -214,25 +250,40 @@ export default function Home({ searchQuery: propSearchQuery }) {
   };
 
   const loadWishlist = async () => {
-    const isLoggedIn = authAPI.isLoggedIn();
+    // ✅ TRIPLE CHECK before making API call
+    if (!isAuthenticated || !user) {
+      console.log("⚠️ [loadWishlist] Not authenticated, skipping");
+      setWishlist([]);
+      return;
+    }
+
+    // Verify token exists
+    const hasToken = authAPI.isLoggedIn();
+    if (!hasToken) {
+      console.log("⚠️ [loadWishlist] No valid token, skipping");
+      setWishlist([]);
+      return;
+    }
     
-    if (isLoggedIn) {
-      try {
-        const response = await wishlistAPI.getWishlist();
-        setWishlist(response.wishlist || []);
-        
-        // Handle pending wishlist action after login
-        if (location.state?.pendingWishlistAction) {
-          const pgToAdd = location.state.pendingWishlistAction;
-          await addToWishlistAfterLogin(pgToAdd);
-          navigate('/', { replace: true, state: {} });
-        }
-      } catch (error) {
-        console.error("Error loading wishlist:", error);
+    try {
+      console.log("📋 [loadWishlist] Loading wishlist for user:", user.name);
+      const response = await wishlistAPI.getWishlist();
+      console.log("✅ [loadWishlist] Wishlist response received:", response);
+      
+      const wishlistData = response.data || response.wishlist || [];
+      setWishlist(wishlistData);
+      console.log(`✅ [loadWishlist] Loaded ${wishlistData.length} items`);
+    } catch (error) {
+      console.error("❌ [loadWishlist] Error:", error.message);
+      
+      if (error.message.includes("Unauthorized") || 
+          error.message.includes("401") ||
+          error.message.includes("Invalid token")) {
+        console.log("🔓 Token invalid or expired, clearing wishlist");
+        setWishlist([]);
+      } else {
         setWishlist([]);
       }
-    } else {
-      setWishlist([]);
     }
   };
 
@@ -254,121 +305,97 @@ export default function Home({ searchQuery: propSearchQuery }) {
 
   const addToWishlistAfterLogin = async (pg) => {
     try {
-      await wishlistAPI.addToWishlist(pg._id || pg.id);
-      await loadWishlist(); // Reload wishlist
+      console.log("➕ Adding to wishlist after login:", pg.name);
+      const pgId = pg._id || pg.id;
+      await wishlistAPI.addToWishlist(pgId);
+      await loadWishlist();
       alert('Added to wishlist!');
     } catch (error) {
-      console.error("Error adding to wishlist:", error);
-      alert('Failed to add to wishlist');
+      console.error("❌ Error adding to wishlist:", error);
+      alert('Failed to add to wishlist: ' + error.message);
     }
   };
 
-// Replace your toggleWishlist and isInWishlist functions in Home.jsx with these:
-
-const toggleWishlist = async (pg, e) => {
-  e.stopPropagation();
-  
-  console.log("=== Toggle Wishlist Debug ===");
-  console.log("PG object:", pg);
-  console.log("PG ID:", pg._id || pg.id);
-  
-  const isLoggedIn = authAPI.isLoggedIn();
-  console.log("Is logged in:", isLoggedIn);
-  console.log("Current token:", sessionStorage.getItem("token") || localStorage.getItem("authToken"));
-  
-  if (!isLoggedIn) {
-    console.log("Not logged in, redirecting to login");
-    navigate('/login', { 
-      state: { 
-        from: '/', 
-        message: 'Please login to add items to your wishlist',
-        pendingWishlistAction: pg
-      } 
-    });
-    return;
-  }
-  
-  try {
-    const pgId = pg._id || pg.id;
-    console.log("Using PG ID:", pgId);
-    console.log("Current wishlist:", wishlist);
+  const toggleWishlist = async (pg, e) => {
+    e.stopPropagation();
     
-    const isInWishlistNow = wishlist.some(item => {
-      const itemId = item._id || item.id;
-      console.log(`Comparing ${itemId} with ${pgId}:`, itemId === pgId);
-      return itemId === pgId;
-    });
-    
-    console.log("Is in wishlist now:", isInWishlistNow);
-    
-    if (isInWishlistNow) {
-      console.log("Removing from wishlist...");
-      const response = await wishlistAPI.removeFromWishlist(pgId);
-      console.log("Remove response:", response);
-      setWishlist(wishlist.filter(item => (item._id || item.id) !== pgId));
-      alert('Removed from wishlist');
-    } else {
-      console.log("Adding to wishlist...");
-      const response = await wishlistAPI.addToWishlist(pgId);
-      console.log("Add response:", response);
-      
-      // Update wishlist with the response from backend
-      if (response.wishlist) {
-        setWishlist(response.wishlist);
-      } else {
-        setWishlist([...wishlist, pg]);
-      }
-      alert('Added to wishlist');
-    }
-  } catch (error) {
-    console.error("Error toggling wishlist:", error);
-    console.error("Error details:", {
-      message: error.message,
-      stack: error.stack
-    });
-    
-    if (error.message.includes("Cannot connect to server")) {
-      alert('Cannot connect to server. Please check your internet connection and ensure the backend is running.');
-    } else if (error.message.includes("401") || error.message.includes("Unauthorized")) {
-      alert('Your session has expired. Please login again.');
+    if (!isAuthenticated || !authAPI.isLoggedIn()) {
+      console.log("🔒 Not authenticated, redirecting to login");
       navigate('/login', { 
         state: { 
           from: '/', 
-          message: 'Session expired. Please login again.',
+          message: 'Please login to add items to your wishlist',
+          pendingWishlistAction: pg
         } 
       });
-    } else {
-      alert(`Failed to update wishlist: ${error.message}`);
+      return;
     }
-  }
-};
-
-const isInWishlist = (pgId) => {
-  // Safety check: return false if no pgId or wishlist is empty
-  if (!pgId || !wishlist || wishlist.length === 0) {
-    return false;
-  }
-  
-  try {
-    const result = wishlist.some(item => {
-      // Safety check: skip if item is null/undefined
-      if (!item) return false;
-      
-      const itemId = item._id || item.id;
-      
-      // Safety check: skip if itemId is null/undefined
-      if (!itemId) return false;
-      
-      // Convert both to strings for comparison
-      return itemId.toString() === pgId.toString();
-    });
     
-    return result;
-  } catch (error) {
-    console.error("Error in isInWishlist:", error);
-    return false;
-  }
-};
+    try {
+      const pgId = pg._id || pg.id;
+      console.log("🔄 Toggle wishlist for PG:", pg.name, "ID:", pgId);
+      
+      const isInWishlistNow = wishlist.some(item => {
+        const itemId = item._id || item.id;
+        return itemId?.toString() === pgId?.toString();
+      });
+      
+      if (isInWishlistNow) {
+        console.log("➖ Removing from wishlist...");
+        await wishlistAPI.removeFromWishlist(pgId);
+        setWishlist(wishlist.filter(item => (item._id || item.id) !== pgId));
+        console.log("✅ Removed from wishlist");
+        alert('Removed from wishlist');
+      } else {
+        console.log("➕ Adding to wishlist...");
+        await wishlistAPI.addToWishlist(pgId);
+        
+        // Reload wishlist to ensure accuracy
+        await loadWishlist();
+        
+        console.log("✅ Added to wishlist");
+        alert('Added to wishlist');
+      }
+    } catch (error) {
+      console.error("❌ Error toggling wishlist:", error);
+      
+      if (error.message.includes("Cannot connect to server")) {
+        alert('Cannot connect to server. Please check your connection.');
+      } else if (error.message.includes("Unauthorized") || 
+                 error.message.includes("401") ||
+                 error.message.includes("Invalid token")) {
+        alert('Your session has expired. Please login again.');
+        navigate('/login', { 
+          state: { 
+            from: '/', 
+            message: 'Session expired. Please login again.',
+            pendingWishlistAction: pg
+          } 
+        });
+      } else {
+        alert(`Failed to update wishlist: ${error.message}`);
+      }
+    }
+  };
+
+  const isInWishlist = (pgId) => {
+    if (!pgId || !wishlist || wishlist.length === 0) {
+      return false;
+    }
+    
+    try {
+      const result = wishlist.some(item => {
+        if (!item) return false;
+        const itemId = item._id || item.id;
+        if (!itemId) return false;
+        return itemId.toString() === pgId.toString();
+      });
+      return result;
+    } catch (error) {
+      console.error("❌ Error in isInWishlist:", error);
+      return false;
+    }
+  };
 
   const filteredPGs = pgsWithDistance.filter(pg => {
     const matchesSearch = searchQuery.trim() === "" || 
@@ -436,7 +463,7 @@ const isInWishlist = (pgId) => {
                   fontSize: '18px',
                   fontWeight: '500'
                 }}>
-                  {isLoadingLocation ? 'Loading your current location...' : 'Loading PGs...'}
+                  {isLoadingLocation ? 'Loading your location...' : 'Loading PGs...'}
                 </p>
               </div>
             ) : filteredPGs.length > 0 ? (
@@ -459,7 +486,7 @@ const isInWishlist = (pgId) => {
               }}>
                 {searchQuery.trim() !== ""
                   ? `No PGs found matching your search.`
-                  : "No PGs found."}
+                  : "No PGs found. Please make sure the backend is running and database is seeded."}
               </p>
             )}
           </div>

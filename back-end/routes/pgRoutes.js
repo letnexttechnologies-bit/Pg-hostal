@@ -1,6 +1,8 @@
 // routes/pgRoutes.js
 const express = require("express");
 const router = express.Router();
+
+// Import controller functions (NOT the model directly)
 const {
   getAllPGs,
   getPGById,
@@ -13,7 +15,7 @@ const {
 router.get("/", getAllPGs);
 router.get("/:id", getPGById);
 
-// Admin routes (you can add authentication middleware later)
+// Admin routes (add auth middleware when needed)
 router.post("/", createPG);
 router.put("/:id", updatePG);
 router.delete("/:id", deletePG);

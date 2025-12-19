@@ -1,5 +1,5 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { LogOut, Heart, Settings, User, Home, Menu, X } from "lucide-react";
 import { authAPI } from "../services/api";
 import "./Navbar.css";
@@ -10,8 +10,12 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
   const dropdownRef = useRef(null);
   const sidebarRef = useRef(null);
   
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  // Simple auth state - just what we need
+  const [authState, setAuthState] = useState({
+    loggedIn: false,
+    user: null
+  });
+  
   const [scrolled, setScrolled] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -26,6 +30,58 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
     locality: ""
   });
 
+  // Single function to check and update auth - use useCallback to prevent recreating
+  const updateAuthState = useCallback(() => {
+    const isLoggedIn = authAPI.isLoggedIn();
+    const userData = authAPI.getCurrentUser();
+    
+    console.log('🔄 Updating auth state:', { isLoggedIn, userName: userData?.name });
+    
+    setAuthState({
+      loggedIn: isLoggedIn,
+      user: userData
+    });
+  }, []);
+
+  // Initial check on mount
+  useEffect(() => {
+    console.log('🎯 Navbar mounted - checking auth');
+    updateAuthState();
+  }, [updateAuthState]);
+
+  // Check auth when location changes
+  useEffect(() => {
+    console.log('📍 Location changed:', location.pathname);
+    updateAuthState();
+  }, [location.pathname, updateAuthState]);
+
+  // Listen for auth events
+  useEffect(() => {
+    console.log('👂 Setting up auth event listeners');
+    
+    const handleAuthChange = (event) => {
+      console.log('🔔 Auth event received:', event.type, event.detail);
+      // Small delay to ensure storage is updated
+      setTimeout(() => {
+        updateAuthState();
+      }, 50);
+    };
+
+    window.addEventListener("authStateChanged", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+    
+    return () => {
+      console.log('🧹 Cleaning up auth event listeners');
+      window.removeEventListener("authStateChanged", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
+  }, [updateAuthState]);
+
+  // Debug log when state changes
+  useEffect(() => {
+    console.log('🎨 Navbar render - Logged in:', authState.loggedIn, 'User:', authState.user?.name);
+  }, [authState]);
+
   useEffect(() => {
     if (filters) {
       setLocalFilters(filters);
@@ -33,16 +89,6 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
   }, [filters]);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const isLoggedIn = authAPI.isLoggedIn();
-      const userData = authAPI.getCurrentUser();
-      
-      setLoggedIn(isLoggedIn);
-      setUser(userData);
-    };
-
-    checkAuth();
-
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
@@ -57,24 +103,11 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
       }
     };
 
-    const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    // Add custom event listener for profile updates
-    const handleProfileUpdate = () => {
-      checkAuth();
-    };
-
     window.addEventListener("scroll", handleScroll);
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("profileUpdated", handleProfileUpdate);
     document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("profileUpdated", handleProfileUpdate);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
@@ -91,28 +124,17 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
     }
   }, [location]);
 
-  const isActive = (path) => location.pathname === path;
-
   const handleLogout = async () => {
     if (window.confirm("Are you sure you want to logout?")) {
-      try {
-        await authAPI.logout();
-        
-        setLoggedIn(false);
-        setUser(null);
-        setShowProfileDropdown(false);
-        
-        window.dispatchEvent(new Event('storage'));
-        navigate('/');
-      } catch (error) {
-        console.error("Error during logout:", error);
-        // Even if API call fails, clear local state
-        authAPI.logout();
-        setLoggedIn(false);
-        setUser(null);
-        setShowProfileDropdown(false);
-        navigate('/');
-      }
+      console.log('🚪 User confirmed logout');
+      authAPI.logout();
+      
+      // Update state immediately
+      setAuthState({ loggedIn: false, user: null });
+      setShowProfileDropdown(false);
+      
+      console.log('✅ Navigating to home');
+      navigate('/');
     }
   };
 
@@ -137,13 +159,11 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
       }
       navigate("/");
     }
-    
     setShowMobileMenu(false);
   };
 
   const handleSearchInputChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
+    setSearchQuery(e.target.value);
   };
 
   const handlePriceChange = (e) => {
@@ -222,7 +242,7 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
         </div>
 
         <div className="nav-right">
-          {!loggedIn ? (
+          {!authState.loggedIn ? (
             <button onClick={() => navigate("/login")} className="nav-btn login-btn">
               <span>Login</span>
             </button>
@@ -234,14 +254,14 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
                 aria-label="Profile menu"
               >
                 <span className="profile-avatar">
-                  {user?.profilePhoto ? (
+                  {authState.user?.profilePhoto ? (
                     <img 
-                      src={user.profilePhoto} 
+                      src={authState.user.profilePhoto} 
                       alt="Profile" 
                       className="profile-avatar-img"
                     />
                   ) : (
-                    user?.name?.charAt(0).toUpperCase() || "U"
+                    authState.user?.name?.charAt(0).toUpperCase() || "U"
                   )}
                 </span>
               </button>
@@ -250,19 +270,19 @@ export default function Navbar({ onFiltersChange, filters, onSearch }) {
                 <div className="profile-dropdown">
                   <div className="dropdown-header">
                     <div className="user-avatar-large">
-                      {user?.profilePhoto ? (
+                      {authState.user?.profilePhoto ? (
                         <img 
-                          src={user.profilePhoto} 
+                          src={authState.user.profilePhoto} 
                           alt="Profile" 
                           className="user-avatar-img"
                         />
                       ) : (
-                        user?.name?.charAt(0).toUpperCase() || "U"
+                        authState.user?.name?.charAt(0).toUpperCase() || "U"
                       )}
                     </div>
                     <div className="user-info-dropdown">
-                      <p className="user-name-dropdown">{user?.name || "User"}</p>
-                      <p className="user-email-dropdown">{user?.email || ""}</p>
+                      <p className="user-name-dropdown">{authState.user?.name || "User"}</p>
+                      <p className="user-email-dropdown">{authState.user?.email || ""}</p>
                     </div>
                   </div>
 

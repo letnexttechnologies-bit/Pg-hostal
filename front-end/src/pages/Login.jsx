@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { authAPI } from "../services/api";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../AuthContext";
 import "./login.css";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, register } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -13,6 +15,7 @@ export default function Login() {
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,73 +42,93 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-
-const handleLogin = async (e) => {
-  e.preventDefault();
-  
-  try {
-    const response = await authAPI.login({ email, password });
+  const handleLogin = async (e) => {
+    e.preventDefault();
     
-    console.log("Login response:", response); // Debug log
-    
-    // Store the token - check what your backend returns
-    if (response.token) {
-      sessionStorage.setItem("token", response.token);
-      localStorage.setItem("authToken", response.token);
-      console.log("Token stored:", response.token); // Debug log
-    }
-    
-    // Store user data
-    if (response.user) {
-      sessionStorage.setItem("user", JSON.stringify(response.user));
-      localStorage.setItem("user", JSON.stringify(response.user));
-      localStorage.setItem("loggedIn", "true");
-      console.log("User stored:", response.user); // Debug log
-    }
-    
-    // Trigger storage event
-    window.dispatchEvent(new Event('storage'));
-    
-    // Navigate based on pending action or default to home
-    if (location.state?.from) {
-      navigate(location.state.from, { 
-        state: { pendingWishlistAction: location.state?.pendingWishlistAction } 
-      });
-    } else {
-      navigate('/');
-    }
-    
-  } catch (error) {
-    console.error("Login error:", error);
-    setError(error.message || "Login failed");
-  }
-};
-
-  const handleRegister = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
     setErrors({});
 
     try {
-      const response = await authAPI.register({
-        name,
-        email: regEmail,
+      console.log('🔐 Attempting login...');
+      
+      const response = await login({ 
+        email: email.trim().toLowerCase(), 
+        password 
+      });
+      
+      console.log("✅ Login successful");
+      
+      // Store token based on "Remember Me" preference
+      if (rememberMe) {
+        // Store in localStorage (persists after browser close)
+        localStorage.setItem("authToken", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        console.log('💾 Stored in localStorage (persistent)');
+      } else {
+        // Store in sessionStorage (clears on browser close)
+        sessionStorage.setItem("token", response.token);
+        sessionStorage.setItem("user", JSON.stringify(response.user));
+        console.log('💾 Stored in sessionStorage (session only)');
+      }
+      
+      // Navigate based on pending action or default to home
+      const from = location.state?.from || '/';
+      const pendingAction = location.state?.pendingWishlistAction;
+      
+      if (pendingAction) {
+        console.log('📌 Redirecting with pending wishlist action');
+        navigate(from, { 
+          replace: true,
+          state: { pendingWishlistAction: pendingAction } 
+        });
+      } else {
+        console.log('🏠 Redirecting to:', from);
+        navigate(from, { replace: true });
+      }
+      
+    } catch (error) {
+      console.error("❌ Login error:", error);
+      setErrors({ login: error.message || "Login failed. Please try again." });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      console.log('📝 Attempting registration...');
+      
+      const response = await register({
+        name: name.trim(),
+        email: regEmail.trim().toLowerCase(),
         password: regPassword
       });
 
-      // Show success message
-      setErrors({ success: "Registration successful! Please login to continue." });
+      console.log("✅ Registration successful");
+      
+      // Store in sessionStorage by default after registration
+      sessionStorage.setItem("token", response.token);
+      sessionStorage.setItem("user", JSON.stringify(response.user));
 
-      // Switch to login mode after 1.5 seconds
+      // Show success message
+      setErrors({ success: "Registration successful! Redirecting..." });
+
+      // Redirect to home after brief delay
       setTimeout(() => {
-        switchMode(true);
-        setErrors({});
-        // Pre-fill email for convenience
-        setEmail(regEmail);
-      }, 1500);
+        navigate('/', { replace: true });
+      }, 1000);
 
     } catch (error) {
+      console.error("❌ Registration error:", error);
       setErrors({ register: error.message || "Registration failed. Please try again." });
     } finally {
       setIsLoading(false);
@@ -121,6 +144,7 @@ const handleLogin = async (e) => {
     setRegEmail("");
     setRegPassword("");
     setShowPassword(false);
+    setRememberMe(false);
   };
 
   return (
@@ -137,6 +161,11 @@ const handleLogin = async (e) => {
           <p className="login-subtitle">
             {isLogin ? "Sign in to find your perfect PG" : "Join us to explore amazing PGs"}
           </p>
+          {location.state?.message && (
+            <p className="redirect-message">
+              {location.state.message}
+            </p>
+          )}
         </div>
 
         <div className="switch-buttons">
@@ -177,7 +206,7 @@ const handleLogin = async (e) => {
         )}
 
         {isLogin ? (
-          <div className="form-container">
+          <form className="form-container" onSubmit={handleLogin}>
             <div className="input-group">
               <input
                 type="email"
@@ -189,6 +218,7 @@ const handleLogin = async (e) => {
                 }}
                 className={errors.email ? "error" : ""}
                 disabled={isLoading}
+                autoComplete="email"
               />
               <label>Email Address</label>
               {errors.email && <span className="field-error">{errors.email}</span>}
@@ -205,6 +235,7 @@ const handleLogin = async (e) => {
                 }}
                 className={errors.password ? "error" : ""}
                 disabled={isLoading}
+                autoComplete="current-password"
               />
               <label>Password</label>
               <button 
@@ -218,13 +249,26 @@ const handleLogin = async (e) => {
               {errors.password && <span className="field-error">{errors.password}</span>}
             </div>
 
-            <div className="forgot-password">
-              <a href="#forgot">Forgot Password?</a>
+            <div className="login-options">
+              <div className="remember-me-container">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoading}
+                />
+                <label htmlFor="rememberMe">Remember me</label>
+              </div>
+              
+              <div className="forgot-password">
+                <a href="#forgot">Forgot Password?</a>
+              </div>
             </div>
 
             <button 
               className="main-btn" 
-              onClick={handleLogin}
+              type="submit"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -239,9 +283,9 @@ const handleLogin = async (e) => {
                 </>
               )}
             </button>
-          </div>
+          </form>
         ) : (
-          <div className="form-container">
+          <form className="form-container" onSubmit={handleRegister}>
             <div className="input-group">
               <input
                 type="text"
@@ -253,6 +297,7 @@ const handleLogin = async (e) => {
                 }}
                 className={errors.name ? "error" : ""}
                 disabled={isLoading}
+                autoComplete="name"
               />
               <label>Full Name</label>
               {errors.name && <span className="field-error">{errors.name}</span>}
@@ -269,6 +314,7 @@ const handleLogin = async (e) => {
                 }}
                 className={errors.regEmail ? "error" : ""}
                 disabled={isLoading}
+                autoComplete="email"
               />
               <label>Email Address</label>
               {errors.regEmail && <span className="field-error">{errors.regEmail}</span>}
@@ -285,6 +331,7 @@ const handleLogin = async (e) => {
                 }}
                 className={errors.regPassword ? "error" : ""}
                 disabled={isLoading}
+                autoComplete="new-password"
               />
               <label>Password</label>
               <button 
@@ -300,7 +347,7 @@ const handleLogin = async (e) => {
 
             <button 
               className="main-btn" 
-              onClick={handleRegister}
+              type="submit"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -315,7 +362,7 @@ const handleLogin = async (e) => {
                 </>
               )}
             </button>
-          </div>
+          </form>
         )}
 
         <div className="login-footer">
