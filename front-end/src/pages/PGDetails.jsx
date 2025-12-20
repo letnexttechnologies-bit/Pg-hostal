@@ -72,18 +72,36 @@ export default function PGDetails() {
   }, [id]);
 
   const loadPGDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await pgAPI.getPGById(id);
-      setPG(response.pg);
-    } catch (error) {
-      console.error("Error loading PG details:", error);
-      alert("Failed to load PG details");
+  try {
+    setLoading(true);
+    console.log("🔍 Loading PG details for ID:", id);
+    
+    const response = await pgAPI.getPGById(id);
+    console.log("📦 Full API Response:", response);
+    
+    // Handle different response structures
+    const pgData = response.pg || response.data?.pg || response.data || response;
+    
+    console.log("🎯 Extracted PG Data:", pgData);
+    
+    if (!pgData) {
+      console.error("❌ No PG data found in response");
+      alert("PG not found");
       navigate("/");
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+    
+    setPG(pgData);
+    console.log("✅ PG data set successfully:", pgData.name);
+  } catch (error) {
+    console.error("❌ Error loading PG details:", error);
+    console.error("Error details:", error.message);
+    alert("Failed to load PG details: " + error.message);
+    navigate("/");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const loadWishlist = async () => {
     const isLoggedIn = authAPI.isLoggedIn();
