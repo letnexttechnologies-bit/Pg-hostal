@@ -140,7 +140,7 @@ function PGCard({ pg, onWishlistToggle, isInWishlist, onNavigate }) {
   );
 }
 
-export default function Home({ searchQuery: propSearchQuery }) {
+export default function Home({ searchQuery: propSearchQuery, filters }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
@@ -397,12 +397,55 @@ export default function Home({ searchQuery: propSearchQuery }) {
     }
   };
 
+  // ✅ ENHANCED FILTERING LOGIC - Apply all filters
   const filteredPGs = pgsWithDistance.filter(pg => {
+    // Search filter (by name or location)
     const matchesSearch = searchQuery.trim() === "" || 
       pg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pg.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    return matchesSearch;
+    // If no filters provided, only apply search
+    if (!filters) {
+      return matchesSearch;
+    }
+    
+    // Price filter
+    const matchesPrice = !filters.maxPrice || pg.price <= filters.maxPrice;
+    
+    // Stay Type filter (Co-living, Student Living)
+    const matchesStayType = !filters.stayType || 
+      filters.stayType.length === 0 || 
+      filters.stayType.includes(pg.stayType);
+    
+    // Sharing Type filter (Private, 2 Sharing, 3 Sharing, 4 Sharing)
+    const matchesSharingType = !filters.sharingType || 
+      filters.sharingType.length === 0 || 
+      filters.sharingType.includes(pg.sharingType);
+    
+    // Gender filter (Male, Female, Unisex)
+    const matchesGender = !filters.gender || 
+      filters.gender.length === 0 || 
+      filters.gender.includes(pg.gender);
+    
+    // Amenities filter - PG must have ALL selected amenities
+    const matchesAmenities = !filters.amenities || 
+      filters.amenities.length === 0 || 
+      (pg.amenities && Array.isArray(pg.amenities) && 
+       filters.amenities.every(amenity => pg.amenities.includes(amenity)));
+    
+    // Locality filter (search in location field)
+    const matchesLocality = !filters.locality || 
+      filters.locality === "" ||
+      pg.location.toLowerCase().includes(filters.locality.toLowerCase());
+    
+    // Return true only if ALL conditions match
+    return matchesSearch && 
+           matchesPrice && 
+           matchesStayType && 
+           matchesSharingType && 
+           matchesGender && 
+           matchesAmenities && 
+           matchesLocality;
   });
 
   return (
@@ -430,6 +473,28 @@ export default function Home({ searchQuery: propSearchQuery }) {
           <path d="m21 21-4.35-4.35"></path>
         </svg>
       </div>
+
+      {/* Show active filters count */}
+      {filters && (
+        <div style={{ 
+          padding: '10px 20px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '10px',
+          color: '#666',
+          fontSize: '14px'
+        }}>
+          {(filters.stayType?.length > 0 || 
+            filters.sharingType?.length > 0 || 
+            filters.gender?.length > 0 || 
+            filters.amenities?.length > 0 ||
+            filters.maxPrice < 25000) && (
+            <span style={{ color: '#d4af37', fontWeight: '500' }}>
+              (Filters active)
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="home-layout">
         <div className="main-content">
@@ -484,8 +549,14 @@ export default function Home({ searchQuery: propSearchQuery }) {
                 fontSize: '18px', 
                 padding: '40px' 
               }}>
-                {searchQuery.trim() !== ""
-                  ? `No PGs found matching your search.`
+                {searchQuery.trim() !== "" || (filters && (
+                  filters.stayType?.length > 0 || 
+                  filters.sharingType?.length > 0 || 
+                  filters.gender?.length > 0 || 
+                  filters.amenities?.length > 0 ||
+                  filters.maxPrice < 25000
+                ))
+                  ? `No PGs found matching your criteria. Try adjusting the filters.`
                   : "No PGs found. Please make sure the backend is running and database is seeded."}
               </p>
             )}

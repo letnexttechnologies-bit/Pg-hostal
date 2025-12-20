@@ -16,21 +16,37 @@ import { useState } from 'react';
 
 function App() {
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    maxPrice: 25000,
+    stayType: [],
+    sharingType: [],
+    gender: [],
+    amenities: [],
+    locality: ""
+  });
 
   const handleGlobalSearch = (query) => {
     setGlobalSearchQuery(query);
   };
 
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
   return (
     <AuthProvider>
       <div className="App">
-        <Navbar onSearch={handleGlobalSearch} />
+        <Navbar 
+          onSearch={handleGlobalSearch}
+          onFiltersChange={handleFiltersChange}
+          filters={filters}
+        />
         
         <Routes>
           {/* Public routes */}
           <Route 
             path="/" 
-            element={<Home searchQuery={globalSearchQuery} />} 
+            element={<Home searchQuery={globalSearchQuery} filters={filters} />} 
           />
           <Route path="/login" element={<Login />} />
           <Route path="/pg/:id" element={<PGDetails />} />
